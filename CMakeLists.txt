@@ -16,6 +16,11 @@ add_executable(main
 
     src/logger.cpp
     src/window.cpp
+    src/raw_model.cpp
+    src/loader.cpp
+    src/renderer.cpp
+    src/shader_program.cpp
+    src/static_shader.cpp
 
     external/glad/src/glad.c
 )

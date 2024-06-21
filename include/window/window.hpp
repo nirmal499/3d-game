@@ -20,5 +20,5 @@ class Window
         void HandleMouseEnterLeaveEvent(int enter);
         void HandleKeyEvents(int key, int scancode, int action, int mods);
     private:
-        GLFWwindow* m_window = nullptr;
+        GLFWwindow* _window = nullptr;
 };

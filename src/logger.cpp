@@ -1,3 +1,3 @@
 #include <util/logger.hpp>
 
-unsigned int Logger::mLogLevel = 1;
+unsigned int Logger::_logLevel = 1;

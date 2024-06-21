@@ -1,4 +1,10 @@
+#include <memory>
+#include <vector>
+#include <component/loader.hpp>
+#include <component/renderer.hpp>
 #include <window/window.hpp>
+#include <component/raw_model.hpp>
+#include <component/static_shader.hpp>
 #include <util/logger.hpp>
 
 bool Window::Initialization(unsigned int width, unsigned int height, std::string title)
@@ -13,9 +19,9 @@ bool Window::Initialization(unsigned int width, unsigned int height, std::string
   	/* set a "hint" for the NEXT window created*/
   	// glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
-  	m_window = glfwCreateWindow(width, height, title.c_str(), nullptr, nullptr);
+  	_window = glfwCreateWindow(width, height, title.c_str(), nullptr, nullptr);
 
-  	if (!m_window)
+  	if (!_window)
   	{
     	Logger::log(1, "%s: Could not create window\n", __FUNCTION__);
     	glfwTerminate();
@@ -24,7 +30,7 @@ bool Window::Initialization(unsigned int width, unsigned int height, std::string
 
   	Logger::log(1, "%s: Window successfully initialized\n", __FUNCTION__);
 
-  	glfwMakeContextCurrent(m_window);
+  	glfwMakeContextCurrent(_window);
 
   	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
   	{
@@ -35,51 +41,51 @@ bool Window::Initialization(unsigned int width, unsigned int height, std::string
   	Logger::log(1, "%s: Successfully initialized GLAD\n", __FUNCTION__);
 
 
-	/* save the pointer to the instance as user pointer. m_window is a mandatory parameter in every glfwWindow functions */
-	glfwSetWindowUserPointer(m_window, this);
+	/* save the pointer to the instance as user pointer. _window is a mandatory parameter in every glfwWindow functions */
+	glfwSetWindowUserPointer(_window, this);
 
-	glfwSetWindowPosCallback(m_window, [](GLFWwindow* win, int xpos, int ypos){
+	glfwSetWindowPosCallback(_window, [](GLFWwindow* win, int xpos, int ypos){
 		auto thisPointerSavedEarlier = static_cast<Window*>(glfwGetWindowUserPointer(win));
 		thisPointerSavedEarlier->HandleWindowMoveEvent(xpos, ypos);
 	});
 
-	glfwSetWindowIconifyCallback(m_window, [](GLFWwindow* win, int minimized){
+	glfwSetWindowIconifyCallback(_window, [](GLFWwindow* win, int minimized){
 		auto thisPointerSavedEarlier = static_cast<Window*>(glfwGetWindowUserPointer(win));
 		thisPointerSavedEarlier->HandleWindowMinimisedEvent(minimized);
 	});
 
-	glfwSetWindowMaximizeCallback(m_window, [](GLFWwindow* win, int maximized){
+	glfwSetWindowMaximizeCallback(_window, [](GLFWwindow* win, int maximized){
 		auto thisPointerSavedEarlier = static_cast<Window*>(glfwGetWindowUserPointer(win));
 		thisPointerSavedEarlier->HandleWindowMaximizedEvent(maximized);
 	});
 
-	glfwSetWindowCloseCallback(m_window, [](GLFWwindow* win){
+	glfwSetWindowCloseCallback(_window, [](GLFWwindow* win){
 		auto thisPointerSavedEarlier = static_cast<Window*>(glfwGetWindowUserPointer(win));
 		thisPointerSavedEarlier->HandleWindowCloseEvent();
 	});
 
-	glfwSetFramebufferSizeCallback(m_window, [](GLFWwindow* win, int width, int height){
+	glfwSetFramebufferSizeCallback(_window, [](GLFWwindow* win, int width, int height){
 		auto thisPointerSavedEarlier = static_cast<Window*>(glfwGetWindowUserPointer(win));
 		thisPointerSavedEarlier->HandleWindowResizeEvent(width, height);
 		glViewport(0, 0, width, height);
 	});
 
-	glfwSetKeyCallback(m_window, [](GLFWwindow *win, int key, int scancode, int action, int mods) {
+	glfwSetKeyCallback(_window, [](GLFWwindow *win, int key, int scancode, int action, int mods) {
 		auto thisPointerSavedEarlier = static_cast<Window*>(glfwGetWindowUserPointer(win));
 		thisPointerSavedEarlier->HandleKeyEvents(key, scancode, action, mods);
 	});
 
-	glfwSetMouseButtonCallback(m_window, [](GLFWwindow* win, int button, int action, int mods){
+	glfwSetMouseButtonCallback(_window, [](GLFWwindow* win, int button, int action, int mods){
 		auto thisPointerSavedEarlier = static_cast<Window*>(glfwGetWindowUserPointer(win));
 		thisPointerSavedEarlier->HandleMouseButtonEvent(button, action, mods);
 	});
 
-	glfwSetCursorPosCallback(m_window, [](GLFWwindow* win, double xpos, double ypos){
+	glfwSetCursorPosCallback(_window, [](GLFWwindow* win, double xpos, double ypos){
 		auto thisPointerSavedEarlier = static_cast<Window*>(glfwGetWindowUserPointer(win));
 		thisPointerSavedEarlier->HandleMousePositionEvent(xpos, ypos);
 	});
 
-	glfwSetCursorEnterCallback(m_window, [](GLFWwindow* win, int enter){
+	glfwSetCursorEnterCallback(_window, [](GLFWwindow* win, int enter){
 		auto thisPointerSavedEarlier = static_cast<Window*>(glfwGetWindowUserPointer(win));
 		thisPointerSavedEarlier->HandleMouseEnterLeaveEvent(enter);
 	});
@@ -241,25 +247,47 @@ void Window::MainLoop()
 		might occur, as the update and buffer switch will be done as fast as possible
 	*/
 	glfwSwapInterval(1);
-	float color = 0.0f;
-	while (!glfwWindowShouldClose(m_window))
+
+	Loader loader;
+	Renderer renderer;
+	StaticShader shader;
+
+	std::vector<float> vertices = {
+		0.5f, 0.5f, 0.0f, // top right
+		0.5f, -0.5f, 0.0f, // bottom right
+		-0.5f, -0.5f, 0.0f, // bottom left
+		-0.5f, 0.5f, 0.0f // top left
+	};
+
+	std::vector<unsigned int> indices = 
 	{
+		0, 1, 3, // first triangle
+		1, 2, 3 // second triangle
+	};
 
-		color >= 1.0f ? color = 0.0f : color += 0.01f;
+	std::unique_ptr<RawModel> rawModel = loader.LoadToVao(vertices, indices);
 
-		glClearColor(color, color, color, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
+	while (!glfwWindowShouldClose(_window))
+	{
+		renderer.Prepare();
+		shader.Start();
+		renderer.Render(rawModel.get());
+		shader.Stop();
 
-		glfwSwapBuffers(m_window);
+		glfwSwapBuffers(_window);
 		/* poll events in a loop */
 		glfwPollEvents();
 
 	}
+	
+	shader.CleanUp();
+	loader.CleanUp();
 }
+
 
 void Window::CleanUp()
 {
 	Logger::log(1, "%s: Terminating Window\n", __FUNCTION__);
-	glfwDestroyWindow(m_window);
+	glfwDestroyWindow(_window);
 	glfwTerminate();
 }
