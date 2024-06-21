@@ -9,6 +9,7 @@ StaticShader::StaticShader()
 void StaticShader::BindAttributes()
 {
     this->BindAttribute(0, "Position");
+    this->BindAttribute(1, "TexCoords");
 }
 
 

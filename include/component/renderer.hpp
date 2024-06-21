@@ -1,11 +1,11 @@
 #pragma once
 
-class RawModel;
+class TexturedModel;
 
 class Renderer
 {
     public:
         /* It will be called every frame */
         void Prepare();
-        void Render(RawModel* model);
+        void Render(TexturedModel* model);
 };

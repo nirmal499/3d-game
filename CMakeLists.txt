@@ -21,6 +21,9 @@ add_executable(main
     src/renderer.cpp
     src/shader_program.cpp
     src/static_shader.cpp
+    src/model_texture.cpp
+    src/textured_model.cpp
+
 
     external/glad/src/glad.c
 )
@@ -32,6 +35,7 @@ target_include_directories(main
 
     PRIVATE include
     PRIVATE external/glad/include
+    PRIVATE external/stbImage/include
 )
 
 target_link_libraries(main

@@ -5,6 +5,8 @@
 #include <window/window.hpp>
 #include <component/raw_model.hpp>
 #include <component/static_shader.hpp>
+#include <component/model_texture.hpp>
+#include <component/textured_model.hpp>
 #include <util/logger.hpp>
 
 bool Window::Initialization(unsigned int width, unsigned int height, std::string title)
@@ -265,13 +267,22 @@ void Window::MainLoop()
 		1, 2, 3 // second triangle
 	};
 
-	std::unique_ptr<RawModel> rawModel = loader.LoadToVao(vertices, indices);
+	std::vector<float> textureCoords = {
+		0.0f,0.0f,
+		0.0f,1.0f,
+		1.0f,1.0f,
+		1.0f,0.0f
+	};
+
+	std::unique_ptr<RawModel> rawModel = loader.LoadToVao(vertices, textureCoords, indices);
+	std::unique_ptr<ModelTexture> texture = std::make_unique<ModelTexture>(loader.LoadTexture(TEXTURE_PATH "crate.png"));
+	std::unique_ptr<TexturedModel> texturedModel = std::make_unique<TexturedModel>(std::move(rawModel), std::move(texture));
 
 	while (!glfwWindowShouldClose(_window))
 	{
 		renderer.Prepare();
 		shader.Start();
-		renderer.Render(rawModel.get());
+		renderer.Render(texturedModel.get());
 		shader.Stop();
 
 		glfwSwapBuffers(_window);
