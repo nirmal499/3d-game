@@ -29,6 +29,10 @@ class Window
         unsigned int _width;
         unsigned int _height;
 
+        bool _firstMouse;
+        int _lastX;
+        int _lastY;
+
         const float _cameraSpeed = 0.05f;
         std::unique_ptr<Camera> _camera;
 };

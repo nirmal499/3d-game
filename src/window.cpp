@@ -32,11 +32,18 @@ bool Window::Initialization(unsigned int width, unsigned int height, std::string
   	}
 
   	/* set a "hint" for the NEXT window created*/
-  	// glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+  	glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
 	_width = width;
 	_height = height;
   	_window = glfwCreateWindow(width, height, title.c_str(), nullptr, nullptr);
+	
+	/*
+		we will tell GLFW that it should hide the cursor and capture it. Capturing a cursor means
+		that, once the application has focus, the mouse cursor stays within the center of the window (unless
+		the application loses focus or quits)
+	*/
+	glfwSetInputMode(_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
   	if (!_window)
   	{
@@ -100,18 +107,22 @@ bool Window::Initialization(unsigned int width, unsigned int height, std::string
 		thisPointerSavedEarlier->HandleMouseButtonEvent(button, action, mods);
 	});
 
-	glfwSetCursorPosCallback(_window, [](GLFWwindow* win, double xpos, double ypos){
-		auto thisPointerSavedEarlier = static_cast<Window*>(glfwGetWindowUserPointer(win));
-		thisPointerSavedEarlier->HandleMousePositionEvent(xpos, ypos);
-	});
-
 	glfwSetCursorEnterCallback(_window, [](GLFWwindow* win, int enter){
 		auto thisPointerSavedEarlier = static_cast<Window*>(glfwGetWindowUserPointer(win));
 		thisPointerSavedEarlier->HandleMouseEnterLeaveEvent(enter);
 	});
 	*/
 
-	_camera = std::make_unique<Camera>(glm::vec3(0, 0, 3), glm::vec3(0, 0, -3), glm::vec3(0, 1, 0));
+	glfwSetCursorPosCallback(_window, [](GLFWwindow* win, double xpos, double ypos){
+		auto thisPointerSavedEarlier = static_cast<Window*>(glfwGetWindowUserPointer(win));
+		thisPointerSavedEarlier->HandleMousePositionEvent(xpos, ypos);
+	});
+
+	_camera = std::make_unique<Camera>(glm::vec3(0, 0, 3), glm::vec3(0, 0, -3), glm::vec3(0, 1, 0), -90.0f, 0.0f);
+
+	_firstMouse = true;
+	_lastX = _width / 2.0f;
+	_lastY = _height / 2.0f;
 
   	return true;
 }
@@ -164,6 +175,41 @@ void Window::HandleMouseButtonEvent(int button, int action, int mods)
 */
 void Window::HandleMousePositionEvent(double xpos, double ypos)
 {
+	if (_firstMouse)
+	{
+		_lastX = xpos;
+		_lastY = ypos;
+		_firstMouse = false;
+	}
+	
+	float xoffset = xpos - _lastX;
+	float yoffset = _lastY - ypos;
+	_lastX = xpos;
+	_lastY = ypos;
+
+	float sensitivity = 0.1f;
+	xoffset *= sensitivity;
+	yoffset *= sensitivity;
+
+	_camera->_yaw += xoffset;
+	_camera->_pitch += yoffset;
+
+	if(_camera->_pitch > 89.0f)
+	{
+		_camera->_pitch = 89.0f;
+	}
+	if(_camera->_pitch < -89.0f)
+	{
+		_camera->_pitch = -89.0f;
+	}
+
+	glm::vec3 direction;
+
+	direction.x = cos(glm::radians(_camera->_yaw)) * cos(glm::radians(_camera->_pitch));
+	direction.y = sin(glm::radians(_camera->_pitch));
+	direction.z = sin(glm::radians(_camera->_yaw)) * cos(glm::radians(_camera->_pitch));
+	_camera->_cameraFront = glm::normalize(direction);
+
 	Logger::log(1, "%s: Mouse is at position %lf/%lf\n", __FUNCTION__, xpos, ypos);
 }
 
@@ -221,6 +267,9 @@ void Window::HandleKeyEvents(int key, int scancode, int action, int mods)
                 	std::cout << "Key A is pressed" << std::endl;
 					_camera->_cameraPos += glm::normalize(glm::cross(_camera->_cameraFront, _camera->_cameraUp)) * _cameraSpeed;
                 	break;
+				case GLFW_KEY_ESCAPE:
+					glfwSetWindowShouldClose(_window, true);
+					break;
             	default:
                 	break;
 				}
@@ -302,29 +351,101 @@ void Window::MainLoop()
 	std::unique_ptr<Renderer> renderer = std::make_unique<Renderer>();
 
 	std::vector<float> vertices = {
-		0.5f, 0.5f, 0.0f, // top right
-		0.5f, -0.5f, 0.0f, // bottom right
-		-0.5f, -0.5f, 0.0f, // bottom left
-		-0.5f, 0.5f, 0.0f // top left
+		// Front face
+		-1.0f, -1.0f,  1.0f,  // 0
+		1.0f, -1.0f,  1.0f,  // 1
+		1.0f,  1.0f,  1.0f,  // 2
+		-1.0f,  1.0f,  1.0f,  // 3
+
+		// Back face
+		-1.0f, -1.0f, -1.0f,  // 4
+		1.0f, -1.0f, -1.0f,  // 5
+		1.0f,  1.0f, -1.0f,  // 6
+		-1.0f,  1.0f, -1.0f,  // 7
+
+		// Left face
+		-1.0f, -1.0f, -1.0f,  // 8
+		-1.0f, -1.0f,  1.0f,  // 9
+		-1.0f,  1.0f,  1.0f,  // 10
+		-1.0f,  1.0f, -1.0f,  // 11
+
+		// Right face
+		1.0f, -1.0f, -1.0f,  // 12
+		1.0f, -1.0f,  1.0f,  // 13
+		1.0f,  1.0f,  1.0f,  // 14
+		1.0f,  1.0f, -1.0f,  // 15
+
+		// Top face
+		-1.0f,  1.0f,  1.0f,  // 16
+		1.0f,  1.0f,  1.0f,  // 17
+		1.0f,  1.0f, -1.0f,  // 18
+		-1.0f,  1.0f, -1.0f,  // 19
+
+		// Bottom face
+		-1.0f, -1.0f,  1.0f,  // 20
+		1.0f, -1.0f,  1.0f,  // 21
+		1.0f, -1.0f, -1.0f,  // 22
+		-1.0f, -1.0f, -1.0f   // 23
 	};
 
 	std::vector<unsigned int> indices = 
 	{
-		0, 1, 3, // first triangle
-		1, 2, 3 // second triangle
+		// Front face
+		0, 1, 2,  2, 3, 0,
+		// Back face
+		4, 5, 6,  6, 7, 4,
+		// Left face
+		8, 9, 10,  10, 11, 8,
+		// Right face
+		12, 13, 14,  14, 15, 12,
+		// Top face
+		16, 17, 18,  18, 19, 16,
+		// Bottom face
+		20, 21, 22,  22, 23, 20
 	};
 
 	std::vector<float> textureCoords = {
-		0.0f,0.0f,
-		0.0f,1.0f,
-		1.0f,1.0f,
-		1.0f,0.0f
+		// Front face
+		0.0f, 0.0f,
+		1.0f, 0.0f,
+		1.0f, 1.0f,
+		0.0f, 1.0f,
+
+		// Back face
+		0.0f, 0.0f,
+		1.0f, 0.0f,
+		1.0f, 1.0f,
+		0.0f, 1.0f,
+
+		// Left face
+		0.0f, 0.0f,
+		1.0f, 0.0f,
+		1.0f, 1.0f,
+		0.0f, 1.0f,
+
+		// Right face
+		0.0f, 0.0f,
+		1.0f, 0.0f,
+		1.0f, 1.0f,
+		0.0f, 1.0f,
+
+		// Top face
+		0.0f, 0.0f,
+		1.0f, 0.0f,
+		1.0f, 1.0f,
+		0.0f, 1.0f,
+
+		// Bottom face
+		0.0f, 0.0f,
+		1.0f, 0.0f,
+		1.0f, 1.0f,
+		0.0f, 1.0f
 	};
 
 	std::unique_ptr<RawModel> rawModel = loader->LoadToVao(vertices, textureCoords, indices);
 	std::unique_ptr<ModelTexture> texture = std::make_unique<ModelTexture>(loader->LoadTexture(TEXTURE_PATH "crate.png"));
 	std::unique_ptr<TexturedModel> texturedModel = std::make_unique<TexturedModel>(std::move(rawModel), std::move(texture));
-	std::unique_ptr<Entity> entity = std::make_unique<Entity>(std::move(texturedModel), glm::vec3(0, 0, -10), glm::vec3(0, 0, 0), 1.0);
+	std::unique_ptr<Entity> entity = std::make_unique<Entity>(std::move(texturedModel), glm::vec3(0, 0, -5), glm::vec3(0, 0, 0), 1.0);
 
 	shader->Start();
     shader->LoadProjectionMatrix(Math::CreateProjectionMatrix(projectionDetails));
