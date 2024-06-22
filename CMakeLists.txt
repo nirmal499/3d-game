@@ -8,6 +8,9 @@ set(CMAKE_BUILD_TYPE Debug)
 
 project(main)
 
+find_package(assimp REQUIRED)
+include_directories(${ASSIMP_INCLUDE_DIRS})
+
 add_subdirectory(external/glfw)
 add_subdirectory(external/glm)
 
@@ -26,6 +29,7 @@ add_executable(main
     src/entity.cpp
     src/math.cpp
     src/camera.cpp
+    src/obj_loader.cpp
 
 
     external/glad/src/glad.c
@@ -43,4 +47,5 @@ target_include_directories(main
 
 target_link_libraries(main
     PRIVATE glfw
+    PRIVATE assimp::assimp
 )

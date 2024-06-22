@@ -17,6 +17,7 @@
 
 #define SHADER_PATH "/home/nbaskey/Desktop/nirmal/projects/ogl-engine-copy/assets/shader/"
 #define TEXTURE_PATH "/home/nbaskey/Desktop/nirmal/projects/ogl-engine-copy/assets/texture/"
+#define RES_PATH "/home/nbaskey/Desktop/nirmal/projects/ogl-engine-copy/assets/res/"
 
 struct ProjectionDetails
 {

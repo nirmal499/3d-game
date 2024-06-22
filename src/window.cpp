@@ -1,3 +1,4 @@
+#include "util/common.hpp"
 #include <component/entity.hpp>
 #include <memory>
 #include <vector>
@@ -8,6 +9,7 @@
 #include <component/static_shader.hpp>
 #include <component/model_texture.hpp>
 #include <component/textured_model.hpp>
+#include <component/obj_loader.hpp>
 #include <component/camera.hpp>
 #include <util/logger.hpp>
 #include <util/math.hpp>
@@ -349,101 +351,10 @@ void Window::MainLoop()
 	std::unique_ptr<Loader> loader = std::make_unique<Loader>();
 	std::unique_ptr<StaticShader> shader = std::make_unique<StaticShader>();
 	std::unique_ptr<Renderer> renderer = std::make_unique<Renderer>();
+	std::unique_ptr<OBJLoader> objLoader = std::make_unique<OBJLoader>();
 
-	std::vector<float> vertices = {
-		// Front face
-		-1.0f, -1.0f,  1.0f,  // 0
-		1.0f, -1.0f,  1.0f,  // 1
-		1.0f,  1.0f,  1.0f,  // 2
-		-1.0f,  1.0f,  1.0f,  // 3
-
-		// Back face
-		-1.0f, -1.0f, -1.0f,  // 4
-		1.0f, -1.0f, -1.0f,  // 5
-		1.0f,  1.0f, -1.0f,  // 6
-		-1.0f,  1.0f, -1.0f,  // 7
-
-		// Left face
-		-1.0f, -1.0f, -1.0f,  // 8
-		-1.0f, -1.0f,  1.0f,  // 9
-		-1.0f,  1.0f,  1.0f,  // 10
-		-1.0f,  1.0f, -1.0f,  // 11
-
-		// Right face
-		1.0f, -1.0f, -1.0f,  // 12
-		1.0f, -1.0f,  1.0f,  // 13
-		1.0f,  1.0f,  1.0f,  // 14
-		1.0f,  1.0f, -1.0f,  // 15
-
-		// Top face
-		-1.0f,  1.0f,  1.0f,  // 16
-		1.0f,  1.0f,  1.0f,  // 17
-		1.0f,  1.0f, -1.0f,  // 18
-		-1.0f,  1.0f, -1.0f,  // 19
-
-		// Bottom face
-		-1.0f, -1.0f,  1.0f,  // 20
-		1.0f, -1.0f,  1.0f,  // 21
-		1.0f, -1.0f, -1.0f,  // 22
-		-1.0f, -1.0f, -1.0f   // 23
-	};
-
-	std::vector<unsigned int> indices = 
-	{
-		// Front face
-		0, 1, 2,  2, 3, 0,
-		// Back face
-		4, 5, 6,  6, 7, 4,
-		// Left face
-		8, 9, 10,  10, 11, 8,
-		// Right face
-		12, 13, 14,  14, 15, 12,
-		// Top face
-		16, 17, 18,  18, 19, 16,
-		// Bottom face
-		20, 21, 22,  22, 23, 20
-	};
-
-	std::vector<float> textureCoords = {
-		// Front face
-		0.0f, 0.0f,
-		1.0f, 0.0f,
-		1.0f, 1.0f,
-		0.0f, 1.0f,
-
-		// Back face
-		0.0f, 0.0f,
-		1.0f, 0.0f,
-		1.0f, 1.0f,
-		0.0f, 1.0f,
-
-		// Left face
-		0.0f, 0.0f,
-		1.0f, 0.0f,
-		1.0f, 1.0f,
-		0.0f, 1.0f,
-
-		// Right face
-		0.0f, 0.0f,
-		1.0f, 0.0f,
-		1.0f, 1.0f,
-		0.0f, 1.0f,
-
-		// Top face
-		0.0f, 0.0f,
-		1.0f, 0.0f,
-		1.0f, 1.0f,
-		0.0f, 1.0f,
-
-		// Bottom face
-		0.0f, 0.0f,
-		1.0f, 0.0f,
-		1.0f, 1.0f,
-		0.0f, 1.0f
-	};
-
-	std::unique_ptr<RawModel> rawModel = loader->LoadToVao(vertices, textureCoords, indices);
-	std::unique_ptr<ModelTexture> texture = std::make_unique<ModelTexture>(loader->LoadTexture(TEXTURE_PATH "crate.png"));
+	std::unique_ptr<RawModel> rawModel = objLoader->LoadObjModel(RES_PATH "stall.obj", loader.get());
+	std::unique_ptr<ModelTexture> texture = std::make_unique<ModelTexture>(loader->LoadTexture(TEXTURE_PATH "stallTexture.png"));
 	std::unique_ptr<TexturedModel> texturedModel = std::make_unique<TexturedModel>(std::move(rawModel), std::move(texture));
 	std::unique_ptr<Entity> entity = std::make_unique<Entity>(std::move(texturedModel), glm::vec3(0, 0, -5), glm::vec3(0, 0, 0), 1.0);
 
