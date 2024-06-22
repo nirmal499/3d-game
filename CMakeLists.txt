@@ -23,6 +23,9 @@ add_executable(main
     src/static_shader.cpp
     src/model_texture.cpp
     src/textured_model.cpp
+    src/entity.cpp
+    src/math.cpp
+    src/camera.cpp
 
 
     external/glad/src/glad.c

@@ -1,3 +1,4 @@
+#include <component/entity.hpp>
 #include <memory>
 #include <vector>
 #include <component/loader.hpp>
@@ -7,7 +8,19 @@
 #include <component/static_shader.hpp>
 #include <component/model_texture.hpp>
 #include <component/textured_model.hpp>
+#include <component/camera.hpp>
 #include <util/logger.hpp>
+#include <util/math.hpp>
+#include <iostream>
+
+Window::Window()
+{
+	
+}
+Window::~Window()
+{
+	
+}
 
 bool Window::Initialization(unsigned int width, unsigned int height, std::string title)
 {
@@ -21,6 +34,8 @@ bool Window::Initialization(unsigned int width, unsigned int height, std::string
   	/* set a "hint" for the NEXT window created*/
   	// glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
+	_width = width;
+	_height = height;
   	_window = glfwCreateWindow(width, height, title.c_str(), nullptr, nullptr);
 
   	if (!_window)
@@ -46,6 +61,7 @@ bool Window::Initialization(unsigned int width, unsigned int height, std::string
 	/* save the pointer to the instance as user pointer. _window is a mandatory parameter in every glfwWindow functions */
 	glfwSetWindowUserPointer(_window, this);
 
+	/*
 	glfwSetWindowPosCallback(_window, [](GLFWwindow* win, int xpos, int ypos){
 		auto thisPointerSavedEarlier = static_cast<Window*>(glfwGetWindowUserPointer(win));
 		thisPointerSavedEarlier->HandleWindowMoveEvent(xpos, ypos);
@@ -71,12 +87,14 @@ bool Window::Initialization(unsigned int width, unsigned int height, std::string
 		thisPointerSavedEarlier->HandleWindowResizeEvent(width, height);
 		glViewport(0, 0, width, height);
 	});
+	*/
 
 	glfwSetKeyCallback(_window, [](GLFWwindow *win, int key, int scancode, int action, int mods) {
 		auto thisPointerSavedEarlier = static_cast<Window*>(glfwGetWindowUserPointer(win));
 		thisPointerSavedEarlier->HandleKeyEvents(key, scancode, action, mods);
 	});
 
+	/*
 	glfwSetMouseButtonCallback(_window, [](GLFWwindow* win, int button, int action, int mods){
 		auto thisPointerSavedEarlier = static_cast<Window*>(glfwGetWindowUserPointer(win));
 		thisPointerSavedEarlier->HandleMouseButtonEvent(button, action, mods);
@@ -91,6 +109,9 @@ bool Window::Initialization(unsigned int width, unsigned int height, std::string
 		auto thisPointerSavedEarlier = static_cast<Window*>(glfwGetWindowUserPointer(win));
 		thisPointerSavedEarlier->HandleMouseEnterLeaveEvent(enter);
 	});
+	*/
+
+	_camera = std::make_unique<Camera>(glm::vec3(0, 0, 3), glm::vec3(0, 0, -3), glm::vec3(0, 1, 0));
 
   	return true;
 }
@@ -179,14 +200,38 @@ void Window::HandleKeyEvents(int key, int scancode, int action, int mods)
 	switch (action)
 	{
 		case GLFW_PRESS:
+		case GLFW_REPEAT:
 			actionName = "pressed";
+			{
+				switch (key)
+				{
+				case GLFW_KEY_W:
+                	std::cout << "Key W is pressed" << std::endl;
+					_camera->_cameraPos += _camera->_cameraFront * _cameraSpeed; 
+                	break;
+            	case GLFW_KEY_S:
+                	std::cout << "Key S is pressed" << std::endl;
+					_camera->_cameraPos -= _camera->_cameraFront * _cameraSpeed; 
+					break;
+            	case GLFW_KEY_D:
+                	std::cout << "Key D is pressed" << std::endl;
+					_camera->_cameraPos -= glm::normalize(glm::cross(_camera->_cameraFront, _camera->_cameraUp)) * _cameraSpeed;
+                	break;
+            	case GLFW_KEY_A:
+                	std::cout << "Key A is pressed" << std::endl;
+					_camera->_cameraPos += glm::normalize(glm::cross(_camera->_cameraFront, _camera->_cameraUp)) * _cameraSpeed;
+                	break;
+            	default:
+                	break;
+				}
+			}
 			break;
 		case GLFW_RELEASE:
 			actionName = "released";
 			break;
-		case GLFW_REPEAT:
-			actionName = "repeated";
-			break;
+		// case GLFW_REPEAT:
+		// 	actionName = "repeated";
+		// 	break;
 		default:
 			actionName = "invalid";
 			break;
@@ -250,9 +295,11 @@ void Window::MainLoop()
 	*/
 	glfwSwapInterval(1);
 
-	Loader loader;
-	Renderer renderer;
-	StaticShader shader;
+	ProjectionDetails projectionDetails(45.0f, _width, _height, 0.1f, 100.0f);
+
+	std::unique_ptr<Loader> loader = std::make_unique<Loader>();
+	std::unique_ptr<StaticShader> shader = std::make_unique<StaticShader>();
+	std::unique_ptr<Renderer> renderer = std::make_unique<Renderer>();
 
 	std::vector<float> vertices = {
 		0.5f, 0.5f, 0.0f, // top right
@@ -274,16 +321,24 @@ void Window::MainLoop()
 		1.0f,0.0f
 	};
 
-	std::unique_ptr<RawModel> rawModel = loader.LoadToVao(vertices, textureCoords, indices);
-	std::unique_ptr<ModelTexture> texture = std::make_unique<ModelTexture>(loader.LoadTexture(TEXTURE_PATH "crate.png"));
+	std::unique_ptr<RawModel> rawModel = loader->LoadToVao(vertices, textureCoords, indices);
+	std::unique_ptr<ModelTexture> texture = std::make_unique<ModelTexture>(loader->LoadTexture(TEXTURE_PATH "crate.png"));
 	std::unique_ptr<TexturedModel> texturedModel = std::make_unique<TexturedModel>(std::move(rawModel), std::move(texture));
+	std::unique_ptr<Entity> entity = std::make_unique<Entity>(std::move(texturedModel), glm::vec3(0, 0, -10), glm::vec3(0, 0, 0), 1.0);
+
+	shader->Start();
+    shader->LoadProjectionMatrix(Math::CreateProjectionMatrix(projectionDetails));
+    shader->Stop();
+
+    glEnable(GL_DEPTH_TEST);
 
 	while (!glfwWindowShouldClose(_window))
 	{
-		renderer.Prepare();
-		shader.Start();
-		renderer.Render(texturedModel.get());
-		shader.Stop();
+		renderer->Prepare();
+		shader->Start();
+		shader->LoadViewMatrix(Math::CreateViewMatrix(_camera.get()));
+		renderer->Render(entity.get(), shader.get());
+		shader->Stop();
 
 		glfwSwapBuffers(_window);
 		/* poll events in a loop */
@@ -291,8 +346,8 @@ void Window::MainLoop()
 
 	}
 	
-	shader.CleanUp();
-	loader.CleanUp();
+	shader->CleanUp();
+	loader->CleanUp();
 }
 
 

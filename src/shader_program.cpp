@@ -21,7 +21,7 @@ ShaderProgram::ShaderProgram(const char* vertexFile, const char* fragmentFile)
 
 void ShaderProgram::Initialize() /* Second phase initialization */
 {
-	_shaderProgramID = this->CreateProgram(_vertexFilePath.c_str(), _fragmentFilePath.c_str());
+	this->CreateProgram(_vertexFilePath.c_str(), _fragmentFilePath.c_str());
 }
 
 /* The contents of the shader file are then stored in a string and returned. */
@@ -74,7 +74,7 @@ GLuint ShaderProgram::CreateShader(GLenum shaderType, const std::string& source,
 	return shader;
 }
 
-GLuint ShaderProgram::CreateProgram(const char* vertexShaderFilename, const char* fragmentShaderFilename)
+void ShaderProgram::CreateProgram(const char* vertexShaderFilename, const char* fragmentShaderFilename)
 {
 
 	//read the shader files and save the code
@@ -91,6 +91,7 @@ GLuint ShaderProgram::CreateProgram(const char* vertexShaderFilename, const char
 	glAttachShader(program, vertex_shader);
 	glAttachShader(program, fragment_shader);
 
+	_shaderProgramID = program;
 	BindAttributes(); /* Do not use this-> here */
 
 	glLinkProgram(program);
@@ -106,19 +107,47 @@ GLuint ShaderProgram::CreateProgram(const char* vertexShaderFilename, const char
 
 		glGetProgramInfoLog(program, info_log_length, NULL, &program_log[0]);
 		std::cout << "Shader Loader : LINK ERROR" << std::endl << &program_log[0] << std::endl;
-		
-		return 0;
 	}
 
 	glDeleteShader(vertex_shader);
 	glDeleteShader(fragment_shader);
 
-	return program;
+	PrefetchAllUniformLocations();
 }
 
-void ShaderProgram::BindAttribute(int arrtibute, const char* variableName)
+void ShaderProgram::BindAttribute(GLuint attribute, const char* variableName)
 {
-	glBindAttribLocation(_shaderProgramID, 0, variableName);
+	glBindAttribLocation(_shaderProgramID, attribute, variableName);
+}
+
+GLuint ShaderProgram::GetUniformLocation(const char* variableName)
+{
+    return glGetUniformLocation(_shaderProgramID, variableName);
+}
+
+void ShaderProgram::LoadDataFloat(GLuint location, float value)
+{
+    glUniform1f(location, value);
+}
+
+void ShaderProgram::LoadDataBoolean(GLuint location, bool value)
+{
+	float toLoad = 0;
+    if(value)
+	{
+		toLoad = 1;
+	}
+    glUniform1f(location, toLoad);
+}
+
+void ShaderProgram::LoadDataMatrix(GLuint location, const glm::mat4& matrix)
+{
+	glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(matrix));
+}
+
+void ShaderProgram::LoadDataVector(GLuint location, const glm::vec3& vector)
+{
+    glUniform3f(location, vector.x, vector.y, vector.z);
 }
 
 void ShaderProgram::CleanUp()
