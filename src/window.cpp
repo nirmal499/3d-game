@@ -1,4 +1,3 @@
-#include "util/common.hpp"
 #include <component/entity.hpp>
 #include <memory>
 #include <vector>
@@ -356,7 +355,7 @@ void Window::MainLoop()
 	std::unique_ptr<RawModel> rawModel = objLoader->LoadObjModel(RES_PATH "stall.obj", loader.get());
 	std::unique_ptr<ModelTexture> texture = std::make_unique<ModelTexture>(loader->LoadTexture(TEXTURE_PATH "stallTexture.png"));
 	std::unique_ptr<TexturedModel> texturedModel = std::make_unique<TexturedModel>(std::move(rawModel), std::move(texture));
-	std::unique_ptr<Entity> entity = std::make_unique<Entity>(std::move(texturedModel), glm::vec3(0, 0, -5), glm::vec3(0, 0, 0), 1.0);
+	std::unique_ptr<Entity> entity = std::make_unique<Entity>(std::move(texturedModel), glm::vec3(0, 0, -20), glm::vec3(0, 0, 0), 1.0);
 
 	shader->Start();
     shader->LoadProjectionMatrix(Math::CreateProjectionMatrix(projectionDetails));
@@ -366,6 +365,7 @@ void Window::MainLoop()
 
 	while (!glfwWindowShouldClose(_window))
 	{
+		entity->IncreaseRotation(glm::vec3(0, 1, 0));
 		renderer->Prepare();
 		shader->Start();
 		shader->LoadViewMatrix(Math::CreateViewMatrix(_camera.get()));

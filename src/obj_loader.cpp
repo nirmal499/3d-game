@@ -12,6 +12,7 @@ std::unique_ptr<RawModel> OBJLoader::LoadObjModel(const char* filePath, Loader* 
 {
 	std::vector<float> vertices;
     std::vector<float> textureCoords;
+    std::vector<float> normals;
     std::vector<unsigned int> indices;
 
     Assimp::Importer importer;
@@ -37,9 +38,26 @@ std::unique_ptr<RawModel> OBJLoader::LoadObjModel(const char* filePath, Loader* 
             vertices.push_back(vertex.y);
             vertices.push_back(vertex.z);
 
-            // Assuming the model has texture coordinates
+            /*
+                Normals are used for lighting calculations, and each vertex in a mesh can have only one normal vector.
+                Therefore, Assimp does not need an index to specify which set of normals you are checking for.
+            */
+            if (mesh->HasNormals()) 
+            {
+                aiVector3D normal = mesh->mNormals[j];
+                normals.push_back(normal.x);
+                normals.push_back(normal.y);
+                normals.push_back(normal.z);
+            }
+
+            /*
+                Assimp supports multiple sets of texture coordinates (also known as UV channels) for a single mesh. This is useful for more
+                complex materials that might need different textures for different purposes (e.g., diffuse map, normal map, light map, etc.).
+                The function HasTextureCoords takes an index to specify which set of texture coordinates you are checking for.
+            */
             if (mesh->HasTextureCoords(0))
 			{
+                /* Process the first set of texture coordinates */
                 aiVector3D texCoord = mesh->mTextureCoords[0][j];
                 textureCoords.push_back(texCoord.x);
                 textureCoords.push_back(texCoord.y);
