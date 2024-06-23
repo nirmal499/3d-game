@@ -15,6 +15,8 @@ class StaticShader : public ShaderProgram
         void LoadViewMatrix(const glm::mat4& matrix);
         void LoadProjectionMatrix(const glm::mat4& matrix);
         void LoadLight(Light* light);
+        void LoadCameraPosition(const glm::vec3& position);
+        void LoadShineVariables(float damper, float reflectivity);
 
     private:
         GLuint _modelMatrixLocation;
@@ -22,6 +24,10 @@ class StaticShader : public ShaderProgram
         GLuint _projectionMatrixLocation;
         GLuint _lightPositionLocation;
         GLuint _lightColourLocation;
+        GLuint _cameraPositionLocation;
+        GLuint _shineDamperLocation;
+        GLuint _reflectivityLocation;
+
 
 
 };

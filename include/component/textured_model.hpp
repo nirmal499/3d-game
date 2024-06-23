@@ -9,8 +9,8 @@ class TexturedModel
 {
     public:
         TexturedModel(std::unique_ptr<RawModel> model, std::unique_ptr<ModelTexture> texture);
-        RawModel* getRawModel();
-        ModelTexture* getTexture();
+        RawModel* GetRawModel();
+        ModelTexture* GetTexture();
 
     private:
         std::unique_ptr<RawModel> _model;

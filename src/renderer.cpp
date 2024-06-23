@@ -26,10 +26,10 @@ void Renderer::Render(Entity* entity, StaticShader* shader)
 
     TexturedModel* model = entity->GetModel();
 
-    RawModel* rawModel = model->getRawModel();
-    ModelTexture* texture = model->getTexture();
+    RawModel* rawModel = model->GetRawModel();
+    ModelTexture* texture = model->GetTexture();
 
-    glBindVertexArray(rawModel->getVaoID());
+    glBindVertexArray(rawModel->GetVaoID());
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
     glEnableVertexAttribArray(2);
@@ -37,9 +37,11 @@ void Renderer::Render(Entity* entity, StaticShader* shader)
     auto modelMatrix = Math::CreateTransformationMatrix(entity->GetPosition(), entity->GetRotation(), entity->GetScale());
     shader->LoadModelMatrix(modelMatrix);
 
+    shader->LoadShineVariables(texture->GetShineDamper(), texture->GetReflectivity());
+
     glActiveTexture(GL_TEXTURE0); /* corresponds to sampler2D uniform in vertex shader */
-    glBindTexture(GL_TEXTURE_2D, texture->getTextureID());
-    glDrawElements(GL_TRIANGLES, rawModel->getVertexCount(), GL_UNSIGNED_INT, 0);
+    glBindTexture(GL_TEXTURE_2D, texture->GetTextureID());
+    glDrawElements(GL_TRIANGLES, rawModel->GetVertexCount(), GL_UNSIGNED_INT, 0);
     glDisableVertexAttribArray(0);
     glDisableVertexAttribArray(1);
     glDisableVertexAttribArray(2);

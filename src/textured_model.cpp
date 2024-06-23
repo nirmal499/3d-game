@@ -10,12 +10,12 @@ TexturedModel::TexturedModel(std::unique_ptr<RawModel> model, std::unique_ptr<Mo
     
 }
 
-RawModel* TexturedModel::getRawModel()
+RawModel* TexturedModel::GetRawModel()
 {
     return _model.get();    
 }
 
-ModelTexture* TexturedModel::getTexture()
+ModelTexture* TexturedModel::GetTexture()
 {
     return _texture.get();
 }

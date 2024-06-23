@@ -354,7 +354,7 @@ void Window::MainLoop()
 	std::unique_ptr<OBJLoader> objLoader = std::make_unique<OBJLoader>();
 
 	std::unique_ptr<RawModel> rawModel = objLoader->LoadObjModel(RES_PATH "dragon.obj", loader.get());
-	std::unique_ptr<ModelTexture> texture = std::make_unique<ModelTexture>(loader->LoadTexture(TEXTURE_PATH "white.png"));
+	std::unique_ptr<ModelTexture> texture = std::make_unique<ModelTexture>(loader->LoadTexture(TEXTURE_PATH "white.png"), 10, 1);
 	std::unique_ptr<TexturedModel> texturedModel = std::make_unique<TexturedModel>(std::move(rawModel), std::move(texture));
 	std::unique_ptr<Entity> entity = std::make_unique<Entity>(std::move(texturedModel), glm::vec3(0, 0, -20), glm::vec3(0, 0, 0), 1.0);
 	std::unique_ptr<Light> light = std::make_unique<Light>(glm::vec3(0, 0, -15), glm::vec3(1.0, 1.0, 1.0));
@@ -370,6 +370,7 @@ void Window::MainLoop()
 		entity->IncreaseRotation(glm::vec3(0, 1, 0));
 		renderer->Prepare();
 		shader->Start();
+		shader->LoadCameraPosition(_camera->GetPositionVector());
 		shader->LoadLight(light.get());
 		shader->LoadViewMatrix(Math::CreateViewMatrix(_camera.get()));
 		renderer->Render(entity.get(), shader.get());
