@@ -1,3 +1,4 @@
+#include <component/master_renderer.hpp>
 #include <component/entity.hpp>
 #include <memory>
 #include <vector>
@@ -15,10 +16,11 @@
 #include <util/math.hpp>
 #include <iostream>
 
-Window::Window()
+Window::Window(): _eng(_rd()), _distr(0.0f, 1.0f)
 {
 	
 }
+
 Window::~Window()
 {
 	
@@ -346,43 +348,49 @@ void Window::MainLoop()
 	*/
 	glfwSwapInterval(1);
 
-	ProjectionDetails projectionDetails(45.0f, _width, _height, 0.1f, 100.0f);
-
 	std::unique_ptr<Loader> loader = std::make_unique<Loader>();
-	std::unique_ptr<StaticShader> shader = std::make_unique<StaticShader>();
-	std::unique_ptr<Renderer> renderer = std::make_unique<Renderer>();
 	std::unique_ptr<OBJLoader> objLoader = std::make_unique<OBJLoader>();
 
-	std::unique_ptr<RawModel> rawModel = objLoader->LoadObjModel(RES_PATH "dragon.obj", loader.get());
-	std::unique_ptr<ModelTexture> texture = std::make_unique<ModelTexture>(loader->LoadTexture(TEXTURE_PATH "white.png"), 10, 1);
-	std::unique_ptr<TexturedModel> texturedModel = std::make_unique<TexturedModel>(std::move(rawModel), std::move(texture));
+	std::unique_ptr<RawModel> rawModel = objLoader->LoadObjModel(RES_PATH "stall.obj", loader.get());
+	std::unique_ptr<ModelTexture> texture = std::make_unique<ModelTexture>(loader->LoadTexture(TEXTURE_PATH "stallTexture.png"), 10, 1);
+	std::unique_ptr<TexturedModel> texturedModel = std::make_unique<TexturedModel>(std::move(rawModel), std::move(texture), "dragon");
 	std::unique_ptr<Entity> entity = std::make_unique<Entity>(std::move(texturedModel), glm::vec3(0, 0, -20), glm::vec3(0, 0, 0), 1.0);
-	std::unique_ptr<Light> light = std::make_unique<Light>(glm::vec3(0, 0, -15), glm::vec3(1.0, 1.0, 1.0));
+	std::unique_ptr<Light> light = std::make_unique<Light>(glm::vec3(3000, 2000, 3000), glm::vec3(1.0, 1.0, 1.0));
 
-	shader->Start();
-    shader->LoadProjectionMatrix(Math::CreateProjectionMatrix(projectionDetails));
-    shader->Stop();
+	std::vector<std::unique_ptr<Entity>> allCubes;
+	for(int i = 0; i < 200; i++)
+	{
+		float x = _distr(_eng) * 100 - 50;
+		float y = _distr(_eng) * 100 - 50;
+		float z = _distr(_eng) * -300;
 
-    glEnable(GL_DEPTH_TEST);
+		float rx = _distr(_eng) * 180.0f;
+		float ry = _distr(_eng) * 180.0f;
+		float rz = 0.0f;
+
+		std::unique_ptr<TexturedModel> cubeModel = std::make_unique<TexturedModel>(*(entity->GetModel()));
+		std::unique_ptr<Entity> cubeEntity = std::make_unique<Entity>(std::move(cubeModel), glm::vec3(x, y, z), glm::vec3(rx, ry, rz), 1.0);
+		allCubes.emplace_back(std::move(cubeEntity));
+	}
+	allCubes.emplace_back(std::move(entity));
+
+	std::unique_ptr<MasterRenderer> masterRenderer = std::make_unique<MasterRenderer>(_width, _height);
 
 	while (!glfwWindowShouldClose(_window))
 	{
-		entity->IncreaseRotation(glm::vec3(0, 1, 0));
-		renderer->Prepare();
-		shader->Start();
-		shader->LoadCameraPosition(_camera->GetPositionVector());
-		shader->LoadLight(light.get());
-		shader->LoadViewMatrix(Math::CreateViewMatrix(_camera.get()));
-		renderer->Render(entity.get(), shader.get());
-		shader->Stop();
+		for(const auto& cube: allCubes)
+		{
+			masterRenderer->ProcessEntity(cube.get());
+		}
 
+		masterRenderer->Render(light.get(), _camera.get());
 		glfwSwapBuffers(_window);
 		/* poll events in a loop */
 		glfwPollEvents();
 
 	}
 	
-	shader->CleanUp();
+	masterRenderer->CleanUp();
 	loader->CleanUp();
 }
 

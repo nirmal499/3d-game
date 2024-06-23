@@ -1,6 +1,7 @@
 #pragma once
 
 #include <util/common.hpp>
+#include <random>
 
 class Camera;
 
@@ -33,6 +34,10 @@ class Window
         int _lastX;
         int _lastY;
 
-        const float _cameraSpeed = 0.05f;
+        const float _cameraSpeed = 0.5f;
         std::unique_ptr<Camera> _camera;
+
+        std::random_device _rd;
+        std::default_random_engine _eng;
+        std::uniform_real_distribution<float> _distr;
 };

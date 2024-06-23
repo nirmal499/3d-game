@@ -27,7 +27,4 @@ class StaticShader : public ShaderProgram
         GLuint _cameraPositionLocation;
         GLuint _shineDamperLocation;
         GLuint _reflectivityLocation;
-
-
-
 };

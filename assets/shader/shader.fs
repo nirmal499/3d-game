@@ -18,7 +18,7 @@ void main(void)
     vec3 UnitLightVector = normalize(ToLightVector);
 
     float diffuseFactor = dot(UnitNormal, UnitLightVector);
-    diffuseFactor = max(diffuseFactor, 0.0);
+    diffuseFactor = max(diffuseFactor, 0.2);
     vec3 diffuse = diffuseFactor * lightColour;
 
     vec3 UnitToCameraVector = normalize(ToCameraVector);

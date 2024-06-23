@@ -6,6 +6,7 @@ class ModelTexture
 {
     public:
         ModelTexture(GLuint id, float shineDamper, float reflectivity);
+        ModelTexture(const ModelTexture& mt);
         GLuint GetTextureID();
 
         float GetShineDamper() const { return _shineDamper; }

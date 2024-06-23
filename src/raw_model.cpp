@@ -7,6 +7,12 @@ RawModel::RawModel(GLuint vaoID, int vertexCount)
     
 }
 
+RawModel::RawModel(const RawModel& rm)
+{
+    _vaoID = rm._vaoID;
+    _vertexCount = rm._vertexCount;
+}
+
 int RawModel::GetVaoID()
 {
     return _vaoID;

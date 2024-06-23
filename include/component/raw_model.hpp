@@ -7,6 +7,8 @@ class RawModel
     public:
         RawModel(GLuint vaoID, int vertexCount);
 
+        RawModel(const RawModel& rm);
+
         int GetVaoID();
         int GetVertexCount();
 

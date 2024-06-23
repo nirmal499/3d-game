@@ -31,6 +31,7 @@ add_executable(main
     src/camera.cpp
     src/obj_loader.cpp
     src/light.cpp
+    src/master_renderer.cpp
 
 
     external/glad/src/glad.c

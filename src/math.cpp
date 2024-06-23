@@ -15,10 +15,10 @@ glm::mat4 Math::CreateTransformationMatrix(const glm::vec3& translation, const g
     return matrix;
 }
 
-glm::mat4 Math::CreateProjectionMatrix(const ProjectionDetails& projectionDetails)
+glm::mat4 Math::CreateProjectionMatrix(ProjectionDetails* projectionDetails)
 {
-    float aspectRatio = static_cast<float>(projectionDetails._width) / static_cast<float>(projectionDetails._height);
-	glm::mat4 pMatrix = glm::perspective(glm::radians(projectionDetails._fov), aspectRatio, projectionDetails._zNear, projectionDetails._zFar);
+    float aspectRatio = static_cast<float>(projectionDetails->_width) / static_cast<float>(projectionDetails->_height);
+	glm::mat4 pMatrix = glm::perspective(glm::radians(projectionDetails->_fov), aspectRatio, projectionDetails->_zNear, projectionDetails->_zFar);
 
     return pMatrix;
 }
