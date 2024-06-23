@@ -1,19 +1,27 @@
 #version 400 core
 
 in vec3 Position;
-in vec2 TexCoords;
-
-out vec3 XColor;
-out vec2 XTexCoords;
+in vec2 TexCoord;
+in vec3 Normal;
+ 
+out vec2 XTexCoord;
+out vec3 SurfaceNormal;
+out vec3 ToLightVector;
 
 uniform mat4 modelMatrix;
 uniform mat4 viewMatrix;
 uniform mat4 projectionMatrix;
+uniform vec3 lightPosition;
 
 void main()
 {
-    gl_Position = projectionMatrix * viewMatrix * modelMatrix * vec4(Position, 1.0);
-    //gl_Position = modelMatrix * vec4(Position, 1.0);
-    XColor = vec3(0.0, 1.0, 0.0);
-    XTexCoords = TexCoords;
+    vec4 WorldPosition = modelMatrix * vec4(Position, 1.0);
+
+    gl_Position = projectionMatrix * viewMatrix * WorldPosition;
+    
+    XTexCoord = TexCoord;
+
+    SurfaceNormal = (modelMatrix * vec4(Normal, 0.0)).xyz;
+    ToLightVector = lightPosition - WorldPosition.xyz;
+    
 }

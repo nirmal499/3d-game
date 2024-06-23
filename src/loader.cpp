@@ -6,18 +6,19 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
-std::unique_ptr<RawModel> Loader::LoadToVao(const std::vector<float>& positions, const std::vector<float>& texCoords, const std::vector<unsigned int>& indices)
+std::unique_ptr<RawModel> Loader::LoadToVao(const std::vector<float>& positions, const std::vector<float>& texCoords, const std::vector<float>& normals, const std::vector<unsigned int>& indices)
 {
     GLuint VaoID;
-    GLuint VboID[2];
+    GLuint VboID[3];
     GLuint EboID;
 
     glGenVertexArrays(1, &VaoID);
     _vaos.push_back(VaoID);
 
-    glGenBuffers(2, VboID);
+    glGenBuffers(3, VboID);
     _vbos.push_back(VboID[0]);
     _vbos.push_back(VboID[1]);
+    _vbos.push_back(VboID[2]);
 
     glGenBuffers(1, &EboID);
     _vbos.push_back(EboID);
@@ -33,6 +34,11 @@ std::unique_ptr<RawModel> Loader::LoadToVao(const std::vector<float>& positions,
         glBufferData(GL_ARRAY_BUFFER, texCoords.size() * sizeof(float), texCoords.data(), GL_STATIC_DRAW);
         glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
         glEnableVertexAttribArray(1);
+
+        glBindBuffer(GL_ARRAY_BUFFER, VboID[2]);
+        glBufferData(GL_ARRAY_BUFFER, normals.size() * sizeof(float), normals.data(), GL_STATIC_DRAW);
+        glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+        glEnableVertexAttribArray(2);
         
         /*  It is generally unnecessary to unbind the element array buffer (EBO) when unbinding the vertex array 
             object (VAO) because the binding of the EBO is stored within the VAO. The state of the 

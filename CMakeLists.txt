@@ -30,6 +30,7 @@ add_executable(main
     src/math.cpp
     src/camera.cpp
     src/obj_loader.cpp
+    src/light.cpp
 
 
     external/glad/src/glad.c

@@ -1,6 +1,7 @@
 #include <component/obj_loader.hpp>
 #include <component/loader.hpp>
 #include <component/raw_model.hpp>
+#include <cstdlib>
 #include <iostream>
 #include <vector>
 
@@ -22,7 +23,7 @@ std::unique_ptr<RawModel> OBJLoader::LoadObjModel(const char* filePath, Loader* 
     if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
 	{
         std::cerr << "Error loading model: " << importer.GetErrorString() << std::endl;
-        return nullptr;
+        std::abort();
     }
 
     // Process each mesh in the scene
@@ -80,6 +81,6 @@ std::unique_ptr<RawModel> OBJLoader::LoadObjModel(const char* filePath, Loader* 
         }
     }
 
-    return loader->LoadToVao(vertices, textureCoords, indices);
+    return loader->LoadToVao(vertices, textureCoords, normals, indices);
 }
 

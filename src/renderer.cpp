@@ -32,6 +32,7 @@ void Renderer::Render(Entity* entity, StaticShader* shader)
     glBindVertexArray(rawModel->getVaoID());
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
+    glEnableVertexAttribArray(2);
 
     auto modelMatrix = Math::CreateTransformationMatrix(entity->GetPosition(), entity->GetRotation(), entity->GetScale());
     shader->LoadModelMatrix(modelMatrix);
@@ -41,6 +42,7 @@ void Renderer::Render(Entity* entity, StaticShader* shader)
     glDrawElements(GL_TRIANGLES, rawModel->getVertexCount(), GL_UNSIGNED_INT, 0);
     glDisableVertexAttribArray(0);
     glDisableVertexAttribArray(1);
+    glDisableVertexAttribArray(2);
     glBindVertexArray(0);
 }
 

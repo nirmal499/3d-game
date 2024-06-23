@@ -3,6 +3,8 @@
 #include <component/shader_program.hpp>
 #include <util/common.hpp>
 
+class Light;
+
 class StaticShader : public ShaderProgram
 {
     public:
@@ -12,10 +14,14 @@ class StaticShader : public ShaderProgram
         void LoadModelMatrix(const glm::mat4& matrix);
         void LoadViewMatrix(const glm::mat4& matrix);
         void LoadProjectionMatrix(const glm::mat4& matrix);
+        void LoadLight(Light* light);
 
     private:
         GLuint _modelMatrixLocation;
         GLuint _viewMatrixLocation;
         GLuint _projectionMatrixLocation;
+        GLuint _lightPositionLocation;
+        GLuint _lightColourLocation;
+
 
 };
