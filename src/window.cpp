@@ -186,44 +186,41 @@ void Window::HandleMouseButtonEvent(int button, int action, int mods)
 /*
   It gives the mouse position when the mouse is in the GLFWwindow screen
 */
-void Window::HandleMousePositionEvent(double xpos, double ypos)
+void Window::HandleMousePositionEvent(double xPos, double yPos)
 {
-	if (_firstMouse)
+	/* calculate relative movement from last position */
+	int mouseMoveRelX = static_cast<int>(xPos) - _mouseXPos;
+	int mouseMoveRelY = static_cast<int>(yPos) - _mouseYPos;
+
+	_camera->_viewAzimuth += mouseMoveRelX / 10.0;
+    /* keep between 0 and 360 degree */
+    if (_camera->_viewAzimuth < 0.0)
 	{
-		_lastX = xpos;
-		_lastY = ypos;
-		_firstMouse = false;
-	}
-	
-	float xoffset = xpos - _lastX;
-	float yoffset = _lastY - ypos;
-	_lastX = xpos;
-	_lastY = ypos;
-
-	float sensitivity = 0.1f;
-	xoffset *= sensitivity;
-	yoffset *= sensitivity;
-
-	_camera->_yaw += xoffset;
-	_camera->_pitch += yoffset;
-
-	if(_camera->_pitch > 89.0f)
+		_camera->_viewAzimuth += 360.0;
+    }
+    if (_camera->_viewAzimuth >= 360.0)
 	{
-		_camera->_pitch = 89.0f;
-	}
-	if(_camera->_pitch < -89.0f)
+		_camera->_viewAzimuth -= 360.0;
+    }
+
+    _camera->_viewElevation -= mouseMoveRelY / 10.0;
+    /* keep between -89 and +89 degree */
+    if (_camera->_viewElevation > 89.0)
 	{
-		_camera->_pitch = -89.0f;
-	}
+		_camera->_viewElevation = 89.0;
+    }
+    if (_camera->_viewElevation < -89.0)
+	{
+		_camera->_viewElevation = -89.0;
+    }
 
-	glm::vec3 direction;
+	/* save old values*/
+  	_mouseXPos = static_cast<int>(xPos);
+  	_mouseYPos = static_cast<int>(yPos);
 
-	direction.x = cos(glm::radians(_camera->_yaw)) * cos(glm::radians(_camera->_pitch));
-	direction.y = sin(glm::radians(_camera->_pitch));
-	direction.z = sin(glm::radians(_camera->_yaw)) * cos(glm::radians(_camera->_pitch));
-	_camera->_cameraFront = glm::normalize(direction);
+	this->CalculateCameraPosition();
 
-	Logger::log(1, "%s: Mouse is at position %lf/%lf\n", __FUNCTION__, xpos, ypos);
+	Logger::log(1, "%s: Mouse is at position %lf/%lf\n", __FUNCTION__, xPos, yPos);
 }
 
 /*
@@ -254,33 +251,52 @@ void Window::HandleWindowResizeEvent(int width, int height)
 */
 void Window::HandleKeyEvents(int key, int scancode, int action, int mods)
 {
-	std::string actionName;
+	// std::string actionName;
 	bool isJLKey = false;
 	bool isOKKey = false;
+	bool isWSDAEQKey = false;
+
+	_moveForward = 0;
+    _moveRight = 0;
+	_moveUp = 0;
 
 	switch (action)
 	{
 		case GLFW_PRESS:
 		case GLFW_REPEAT:
-			actionName = "pressed";
+			// actionName = "pressed";
 			{
 				switch (key)
 				{
 				case GLFW_KEY_W:
                 	std::cout << "Key W is pressed" << std::endl;
-					_camera->_cameraPos += _camera->_cameraFront * _cameraSpeed;
+					_moveForward += 1;
+					isWSDAEQKey = true;
                 	break;
             	case GLFW_KEY_S:
                 	std::cout << "Key S is pressed" << std::endl;
-					_camera->_cameraPos -= _camera->_cameraFront * _cameraSpeed;
+					_moveForward -= 1;
+					isWSDAEQKey = true;
 					break;
             	case GLFW_KEY_D:
                 	std::cout << "Key D is pressed" << std::endl;
-					_camera->_cameraPos += glm::normalize(glm::cross(_camera->_cameraFront, _camera->_cameraUp)) * _cameraSpeed;
+					_moveRight += 1;
+					isWSDAEQKey = true;
                 	break;
             	case GLFW_KEY_A:
                 	std::cout << "Key A is pressed" << std::endl;
-					_camera->_cameraPos -= glm::normalize(glm::cross(_camera->_cameraFront, _camera->_cameraUp)) * _cameraSpeed;
+					_moveRight -= 1;
+					isWSDAEQKey = true;
+                	break;
+				case GLFW_KEY_E:
+                	std::cout << "Key E is pressed" << std::endl;
+					_moveUp += 1;
+					isWSDAEQKey = true;
+                	break;
+				case GLFW_KEY_Q:
+                	std::cout << "Key Q is pressed" << std::endl;
+					_moveUp -= 1;
+					isWSDAEQKey = true;
                 	break;
 				case GLFW_KEY_O:
                 	std::cout << "Key O is pressed" << std::endl;
@@ -313,37 +329,72 @@ void Window::HandleKeyEvents(int key, int scancode, int action, int mods)
 			}
 			break;
 		case GLFW_RELEASE:
-			actionName = "released";
+			// actionName = "released";
 			break;
 		// case GLFW_REPEAT:
 		// 	actionName = "repeated";
 		// 	break;
 		default:
-			actionName = "invalid";
+			// actionName = "invalid";
 			break;
+	}
+
+	if(isWSDAEQKey)
+	{
+		this->CalculateCameraPosition();
 	}
 
 	if(isJLKey)
 	{
 		_tempVec3.x = 0.0f;
-		_tempVec3.y = _player->_currentTurnSpeed * _frameTime;
+		_tempVec3.y = _player->_currentTurnSpeed * _speed;
 		_tempVec3.z = 0.0f;
 		_player->IncreaseRotation(_tempVec3);
 	}
 	
 	if(isOKKey)
 	{
-		_tempDistance = _player->_currentSpeed * _frameTime;
-		_tempDx = static_cast<float>(_tempDistance * glm::sin(glm::radians(_player->GetRotation().y)));
-		_tempDz = static_cast<float>(_tempDistance * glm::cos(glm::radians(_player->GetRotation().y)));
-		_tempVec3.x = _tempDx;
+		_tempFloat1 = _player->_currentSpeed * _speed;
+		_tempFloat2 = static_cast<float>(_tempFloat1 * glm::sin(glm::radians(_player->GetRotation().y)));
+		_tempFloat3 = static_cast<float>(_tempFloat1 * glm::cos(glm::radians(_player->GetRotation().y)));
+		_tempVec3.x = _tempFloat2;
 		_tempVec3.y = 0.0f;
-		_tempVec3.z = _tempDz;
+		_tempVec3.z = _tempFloat3;
 		_player->IncreasePosition(_tempVec3);
 	}
 
-  	const char *keyName = glfwGetKeyName(key, 0);
-  	Logger::log(1, "%s: key %s (key %i, scancode %i) %s\n", __FUNCTION__, keyName, key, scancode, actionName.c_str());
+  	// const char *keyName = glfwGetKeyName(key, 0);
+  	// Logger::log(1, "%s: key %s (key %i, scancode %i) %s\n", __FUNCTION__, keyName, key, scancode, actionName.c_str());
+}
+
+void Window::CalculateCameraPosition()
+{
+	_tempFloat1 = glm::radians(_camera->_viewAzimuth);
+	_tempFloat2 = glm::radians(_camera->_viewElevation);
+
+	_tempFloat3 = glm::cos(_tempFloat1);		/* cosAzimuth */
+	_tempFloat4 = glm::sin(_tempFloat1);		/* sinAzimuth */
+	_tempFloat5 = glm::cos(_tempFloat2);		/* cosElevation */
+	_tempFloat6 = glm::sin(_tempFloat2);		/* sinElevation */
+
+	/* update view direction */
+	_camera->_viewDirection = glm::normalize(
+		glm::vec3(
+			_tempFloat5 * _tempFloat3,
+			_tempFloat6,
+			_tempFloat5 * _tempFloat4
+		)
+	);
+
+	/* calculate right and up direction */
+	_camera->_rightDirection = glm::normalize(glm::cross(_camera->_viewDirection, _camera->_worldUpVector));
+	_camera->_upDirection = glm::normalize(glm::cross(_camera->_rightDirection, _camera->_viewDirection));
+
+	/* update camera position depending on desired movement */
+	_camera->_cameraWorldPosition +=	
+			_moveForward * _speed * _camera->_viewDirection
+		+ 	_moveRight * _speed * _camera->_rightDirection
+		+ 	_moveUp * _speed * _camera->_upDirection;
 }
 
 /*
@@ -400,9 +451,25 @@ void Window::MainLoop()
 	*/
 	glfwSwapInterval(1);
 
-	std::unique_ptr<Light> light = std::make_unique<Light>(glm::vec3(0, 0, -15), glm::vec3(1.0, 1.0, 1.0));
+	std::unique_ptr<Light> light = std::make_unique<Light>(glm::vec3(3000, 2000, 3000), glm::vec3(1.0, 1.0, 1.0));
 
 	std::unique_ptr<MasterRenderer> masterRenderer = std::make_unique<MasterRenderer>(_width, _height);
+
+	std::vector<std::unique_ptr<Entity>> allCubes;
+	for(int i = 0; i < 200; i++)
+	{
+		float x = _distr(_eng) * 100 - 50;
+		float y = _distr(_eng) * 100 - 50;
+		float z = _distr(_eng) * -300;
+
+		float rx = _distr(_eng) * 180.0f;
+		float ry = _distr(_eng) * 180.0f;
+		float rz = 0.0f;
+
+		std::unique_ptr<TexturedModel> cubeModel = std::make_unique<TexturedModel>(*(_player->GetModel()));
+		std::unique_ptr<Entity> cubeEntity = std::make_unique<Entity>(std::move(cubeModel), glm::vec3(x, y, z), glm::vec3(rx, ry, rz), 1.0);
+		allCubes.emplace_back(std::move(cubeEntity));
+	}
 
 	static float prevFrameStartTime = 0.0f;
 	float frameStartTime = 0.0f;
@@ -410,6 +477,10 @@ void Window::MainLoop()
 	{
   		frameStartTime = glfwGetTime();
 
+		for(const auto& cube: allCubes)
+		{
+			masterRenderer->ProcessEntity(cube.get());
+		}
 		masterRenderer->ProcessEntity(_player.get());
 		masterRenderer->Render(light.get(), _camera.get());
 		

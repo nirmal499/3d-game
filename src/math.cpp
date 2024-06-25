@@ -26,9 +26,9 @@ glm::mat4 Math::CreateProjectionMatrix(ProjectionDetails* projectionDetails)
 glm::mat4 Math::CreateViewMatrix(Camera* camera)
 {
     glm::mat4 viewMatrix = glm::lookAt(
-		camera->GetPositionVector(),
-        camera->GetPositionVector() + camera->GetFrontVector(),
-        camera->GetUpVector()
+		camera->GetWorldPosition(),
+        camera->GetWorldPosition() + camera->GetViewDirection(),
+        camera->GetUpDirection()
 	);
 
     // glm::mat4 viewMatrix = glm::lookAt(
