@@ -32,6 +32,7 @@ add_executable(main
     src/obj_loader.cpp
     src/light.cpp
     src/master_renderer.cpp
+    src/player.cpp
 
 
     external/glad/src/glad.c

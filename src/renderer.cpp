@@ -14,6 +14,7 @@ Renderer::Renderer(StaticShader* shader, int width, int height)
     glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_BACK);
+    // glEnable(GL_TEXTURE_2D);
 
     _projectionDetails = std::make_unique<ProjectionDetails>(70.0f, width, height, 0.1f, 1000.0f);
 
@@ -24,7 +25,7 @@ Renderer::Renderer(StaticShader* shader, int width, int height)
 
 void Renderer::Prepare()
 {
-    glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
+    glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 

@@ -78,7 +78,7 @@ GLuint Loader::LoadTexture(const char* fileName)
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
 		/* It defines the format and content of a texture that can be applied to 3D objects for rendering */
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, textureData);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, noofchannels == 3 ? GL_RGB : GL_RGBA, GL_UNSIGNED_BYTE, textureData);
 		glGenerateMipmap(GL_TEXTURE_2D);
 
   	glBindTexture(GL_TEXTURE_2D, 0);

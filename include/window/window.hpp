@@ -4,6 +4,9 @@
 #include <random>
 
 class Camera;
+class Player;
+class Loader;
+class OBJLoader;
 
 class Window
 {
@@ -36,8 +39,19 @@ class Window
 
         const float _cameraSpeed = 0.5f;
         std::unique_ptr<Camera> _camera;
+        std::unique_ptr<Player> _player;
+        std::unique_ptr<Loader> _loader;
+        std::unique_ptr<OBJLoader> _objLoader;
+
+        glm::vec3 _tempVec3;
+        float _tempDistance;
+        float _tempDx;
+        float _tempDy;
+        float _tempDz;
 
         std::random_device _rd;
         std::default_random_engine _eng;
         std::uniform_real_distribution<float> _distr;
+
+        float _frameTime = 0.0f;
 };

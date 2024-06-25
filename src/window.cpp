@@ -12,6 +12,7 @@
 #include <component/textured_model.hpp>
 #include <component/obj_loader.hpp>
 #include <component/camera.hpp>
+#include <component/player.hpp>
 #include <util/logger.hpp>
 #include <util/math.hpp>
 #include <iostream>
@@ -122,8 +123,16 @@ bool Window::Initialization(unsigned int width, unsigned int height, std::string
 		thisPointerSavedEarlier->HandleMousePositionEvent(xpos, ypos);
 	});
 
+	_loader = std::make_unique<Loader>();
+	_objLoader = std::make_unique<OBJLoader>();
+
 	_camera = std::make_unique<Camera>(glm::vec3(0, 0, 3), glm::vec3(0, 0, -3), glm::vec3(0, 1, 0), -90.0f, 0.0f);
 
+	std::unique_ptr<RawModel> rawModel = _objLoader->LoadObjModel(RES_PATH "sheep.obj", _loader.get());
+	std::unique_ptr<ModelTexture> texture = std::make_unique<ModelTexture>(_loader->LoadTexture(TEXTURE_PATH "sheep.png"), 10, 1);
+	std::unique_ptr<TexturedModel> texturedModel = std::make_unique<TexturedModel>(std::move(rawModel), std::move(texture), "sheep");
+	_player = std::make_unique<Player>(std::move(texturedModel), glm::vec3(0, 0, -20), glm::vec3(0, 0, 0), 1.0);
+	
 	_firstMouse = true;
 	_lastX = _width / 2.0f;
 	_lastY = _height / 2.0f;
@@ -246,6 +255,8 @@ void Window::HandleWindowResizeEvent(int width, int height)
 void Window::HandleKeyEvents(int key, int scancode, int action, int mods)
 {
 	std::string actionName;
+	bool isJLKey = false;
+	bool isOKKey = false;
 
 	switch (action)
 	{
@@ -257,24 +268,46 @@ void Window::HandleKeyEvents(int key, int scancode, int action, int mods)
 				{
 				case GLFW_KEY_W:
                 	std::cout << "Key W is pressed" << std::endl;
-					_camera->_cameraPos += _camera->_cameraFront * _cameraSpeed; 
+					_camera->_cameraPos += _camera->_cameraFront * _cameraSpeed;
                 	break;
             	case GLFW_KEY_S:
                 	std::cout << "Key S is pressed" << std::endl;
-					_camera->_cameraPos -= _camera->_cameraFront * _cameraSpeed; 
+					_camera->_cameraPos -= _camera->_cameraFront * _cameraSpeed;
 					break;
             	case GLFW_KEY_D:
                 	std::cout << "Key D is pressed" << std::endl;
-					_camera->_cameraPos -= glm::normalize(glm::cross(_camera->_cameraFront, _camera->_cameraUp)) * _cameraSpeed;
+					_camera->_cameraPos += glm::normalize(glm::cross(_camera->_cameraFront, _camera->_cameraUp)) * _cameraSpeed;
                 	break;
             	case GLFW_KEY_A:
                 	std::cout << "Key A is pressed" << std::endl;
-					_camera->_cameraPos += glm::normalize(glm::cross(_camera->_cameraFront, _camera->_cameraUp)) * _cameraSpeed;
+					_camera->_cameraPos -= glm::normalize(glm::cross(_camera->_cameraFront, _camera->_cameraUp)) * _cameraSpeed;
+                	break;
+				case GLFW_KEY_O:
+                	std::cout << "Key O is pressed" << std::endl;
+					_player->_currentSpeed = Player::RUN_SPEED;
+					isOKKey = true;
+                	break;
+            	case GLFW_KEY_K:
+                	std::cout << "Key K is pressed" << std::endl;
+					_player->_currentSpeed = -Player::RUN_SPEED;
+					isOKKey = true;
+					break;
+            	case GLFW_KEY_J:
+                	std::cout << "Key J is pressed" << std::endl;
+					_player->_currentTurnSpeed = Player::TURN_SPEED;
+					isJLKey = true;
+                	break;
+            	case GLFW_KEY_L:
+                	std::cout << "Key L is pressed" << std::endl;
+					_player->_currentTurnSpeed = -Player::TURN_SPEED;
+					isJLKey = true;
                 	break;
 				case GLFW_KEY_ESCAPE:
 					glfwSetWindowShouldClose(_window, true);
 					break;
             	default:
+					_player->_currentSpeed = 0;
+					_player->_currentTurnSpeed = 0;
                 	break;
 				}
 			}
@@ -288,6 +321,25 @@ void Window::HandleKeyEvents(int key, int scancode, int action, int mods)
 		default:
 			actionName = "invalid";
 			break;
+	}
+
+	if(isJLKey)
+	{
+		_tempVec3.x = 0.0f;
+		_tempVec3.y = _player->_currentTurnSpeed * _frameTime;
+		_tempVec3.z = 0.0f;
+		_player->IncreaseRotation(_tempVec3);
+	}
+	
+	if(isOKKey)
+	{
+		_tempDistance = _player->_currentSpeed * _frameTime;
+		_tempDx = static_cast<float>(_tempDistance * glm::sin(glm::radians(_player->GetRotation().y)));
+		_tempDz = static_cast<float>(_tempDistance * glm::cos(glm::radians(_player->GetRotation().y)));
+		_tempVec3.x = _tempDx;
+		_tempVec3.y = 0.0f;
+		_tempVec3.z = _tempDz;
+		_player->IncreasePosition(_tempVec3);
 	}
 
   	const char *keyName = glfwGetKeyName(key, 0);
@@ -348,50 +400,33 @@ void Window::MainLoop()
 	*/
 	glfwSwapInterval(1);
 
-	std::unique_ptr<Loader> loader = std::make_unique<Loader>();
-	std::unique_ptr<OBJLoader> objLoader = std::make_unique<OBJLoader>();
-
-	std::unique_ptr<RawModel> rawModel = objLoader->LoadObjModel(RES_PATH "stall.obj", loader.get());
-	std::unique_ptr<ModelTexture> texture = std::make_unique<ModelTexture>(loader->LoadTexture(TEXTURE_PATH "stallTexture.png"), 10, 1);
-	std::unique_ptr<TexturedModel> texturedModel = std::make_unique<TexturedModel>(std::move(rawModel), std::move(texture), "dragon");
-	std::unique_ptr<Entity> entity = std::make_unique<Entity>(std::move(texturedModel), glm::vec3(0, 0, -20), glm::vec3(0, 0, 0), 1.0);
-	std::unique_ptr<Light> light = std::make_unique<Light>(glm::vec3(3000, 2000, 3000), glm::vec3(1.0, 1.0, 1.0));
-
-	std::vector<std::unique_ptr<Entity>> allCubes;
-	for(int i = 0; i < 200; i++)
-	{
-		float x = _distr(_eng) * 100 - 50;
-		float y = _distr(_eng) * 100 - 50;
-		float z = _distr(_eng) * -300;
-
-		float rx = _distr(_eng) * 180.0f;
-		float ry = _distr(_eng) * 180.0f;
-		float rz = 0.0f;
-
-		std::unique_ptr<TexturedModel> cubeModel = std::make_unique<TexturedModel>(*(entity->GetModel()));
-		std::unique_ptr<Entity> cubeEntity = std::make_unique<Entity>(std::move(cubeModel), glm::vec3(x, y, z), glm::vec3(rx, ry, rz), 1.0);
-		allCubes.emplace_back(std::move(cubeEntity));
-	}
-	allCubes.emplace_back(std::move(entity));
+	std::unique_ptr<Light> light = std::make_unique<Light>(glm::vec3(0, 0, -15), glm::vec3(1.0, 1.0, 1.0));
 
 	std::unique_ptr<MasterRenderer> masterRenderer = std::make_unique<MasterRenderer>(_width, _height);
 
+	static float prevFrameStartTime = 0.0f;
+	float frameStartTime = 0.0f;
 	while (!glfwWindowShouldClose(_window))
 	{
-		for(const auto& cube: allCubes)
-		{
-			masterRenderer->ProcessEntity(cube.get());
-		}
+  		frameStartTime = glfwGetTime();
 
+		masterRenderer->ProcessEntity(_player.get());
 		masterRenderer->Render(light.get(), _camera.get());
+		
 		glfwSwapBuffers(_window);
+
+		_frameTime = frameStartTime - prevFrameStartTime;
+  		prevFrameStartTime = frameStartTime;
+
 		/* poll events in a loop */
 		glfwPollEvents();
 
 	}
 	
 	masterRenderer->CleanUp();
-	loader->CleanUp();
+
+	_loader->CleanUp();
+
 }
 
 
