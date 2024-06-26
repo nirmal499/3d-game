@@ -14,6 +14,7 @@
 #include <component/camera.hpp>
 #include <component/player.hpp>
 #include <util/logger.hpp>
+
 #include <util/math.hpp>
 #include <iostream>
 
@@ -126,17 +127,13 @@ bool Window::Initialization(unsigned int width, unsigned int height, std::string
 	_loader = std::make_unique<Loader>();
 	_objLoader = std::make_unique<OBJLoader>();
 
-	_camera = std::make_unique<Camera>(glm::vec3(0, 0, 3), glm::vec3(0, 0, -3), glm::vec3(0, 1, 0), -90.0f, 0.0f);
+	_camera = std::make_unique<Camera>(glm::vec3(0.0f, 0.0f, 5.0f), glm::vec3(0.0f, 0.0f, -1.0f), 0.0f, 0.0f);
 
 	std::unique_ptr<RawModel> rawModel = _objLoader->LoadObjModel(RES_PATH "sheep.obj", _loader.get());
 	std::unique_ptr<ModelTexture> texture = std::make_unique<ModelTexture>(_loader->LoadTexture(TEXTURE_PATH "sheep.png"), 10, 1);
 	std::unique_ptr<TexturedModel> texturedModel = std::make_unique<TexturedModel>(std::move(rawModel), std::move(texture), "sheep");
-	_player = std::make_unique<Player>(std::move(texturedModel), glm::vec3(0, 0, -20), glm::vec3(0, 0, 0), 1.0);
+	_player = std::make_unique<Player>(std::move(texturedModel), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0, 0, 0), 1.0);
 	
-	_firstMouse = true;
-	_lastX = _width / 2.0f;
-	_lastY = _height / 2.0f;
-
   	return true;
 }
 
@@ -220,7 +217,7 @@ void Window::HandleMousePositionEvent(double xPos, double yPos)
 
 	this->CalculateCameraPosition();
 
-	Logger::log(1, "%s: Mouse is at position %lf/%lf\n", __FUNCTION__, xPos, yPos);
+	// Logger::log(1, "%s: Mouse is at position %lf/%lf\n", __FUNCTION__, xPos, yPos);
 }
 
 /*
@@ -347,20 +344,21 @@ void Window::HandleKeyEvents(int key, int scancode, int action, int mods)
 	if(isJLKey)
 	{
 		_tempVec3.x = 0.0f;
-		_tempVec3.y = _player->_currentTurnSpeed * _speed;
+		_tempVec3.y = _player->_currentTurnSpeed * _frameTime;
 		_tempVec3.z = 0.0f;
 		_player->IncreaseRotation(_tempVec3);
 	}
 	
 	if(isOKKey)
 	{
-		_tempFloat1 = _player->_currentSpeed * _speed;
+		_tempFloat1 = _player->_currentSpeed * _frameTime;
 		_tempFloat2 = static_cast<float>(_tempFloat1 * glm::sin(glm::radians(_player->GetRotation().y)));
 		_tempFloat3 = static_cast<float>(_tempFloat1 * glm::cos(glm::radians(_player->GetRotation().y)));
 		_tempVec3.x = _tempFloat2;
 		_tempVec3.y = 0.0f;
 		_tempVec3.z = _tempFloat3;
 		_player->IncreasePosition(_tempVec3);
+
 	}
 
   	// const char *keyName = glfwGetKeyName(key, 0);
@@ -392,9 +390,9 @@ void Window::CalculateCameraPosition()
 
 	/* update camera position depending on desired movement */
 	_camera->_cameraWorldPosition +=	
-			_moveForward * _speed * _camera->_viewDirection
-		+ 	_moveRight * _speed * _camera->_rightDirection
-		+ 	_moveUp * _speed * _camera->_upDirection;
+			_moveForward * _frameTime * _camera->_viewDirection
+		+ 	_moveRight * _frameTime * _camera->_rightDirection
+		+ 	_moveUp * _frameTime * _camera->_upDirection;
 }
 
 /*
@@ -451,43 +449,25 @@ void Window::MainLoop()
 	*/
 	glfwSwapInterval(1);
 
-	std::unique_ptr<Light> light = std::make_unique<Light>(glm::vec3(3000, 2000, 3000), glm::vec3(1.0, 1.0, 1.0));
+	std::unique_ptr<Light> light = std::make_unique<Light>(glm::vec3(0, 0, -5), glm::vec3(1.0, 1.0, 1.0));
 
 	std::unique_ptr<MasterRenderer> masterRenderer = std::make_unique<MasterRenderer>(_width, _height);
 
-	std::vector<std::unique_ptr<Entity>> allCubes;
-	for(int i = 0; i < 200; i++)
-	{
-		float x = _distr(_eng) * 100 - 50;
-		float y = _distr(_eng) * 100 - 50;
-		float z = _distr(_eng) * -300;
-
-		float rx = _distr(_eng) * 180.0f;
-		float ry = _distr(_eng) * 180.0f;
-		float rz = 0.0f;
-
-		std::unique_ptr<TexturedModel> cubeModel = std::make_unique<TexturedModel>(*(_player->GetModel()));
-		std::unique_ptr<Entity> cubeEntity = std::make_unique<Entity>(std::move(cubeModel), glm::vec3(x, y, z), glm::vec3(rx, ry, rz), 1.0);
-		allCubes.emplace_back(std::move(cubeEntity));
-	}
-
-	static float prevFrameStartTime = 0.0f;
-	float frameStartTime = 0.0f;
 	while (!glfwWindowShouldClose(_window))
 	{
-  		frameStartTime = glfwGetTime();
+  		_frameStartTime = glfwGetTime();
+		
+		std::cout << "Camera View: " << _camera->_viewAzimuth << " " << _camera->_viewElevation << "\n";
+		std::cout << "Camera Position: " << _camera->_cameraWorldPosition.x << " " << _camera->_cameraWorldPosition.y << " " << _camera->_cameraWorldPosition.z << "\n";
+		std::cout << "Player Position: " << _player->GetPosition().x << " " << _player->GetPosition().y<< " " << _player->GetPosition().z << "\n";
 
-		for(const auto& cube: allCubes)
-		{
-			masterRenderer->ProcessEntity(cube.get());
-		}
 		masterRenderer->ProcessEntity(_player.get());
 		masterRenderer->Render(light.get(), _camera.get());
 		
 		glfwSwapBuffers(_window);
 
-		_frameTime = frameStartTime - prevFrameStartTime;
-  		prevFrameStartTime = frameStartTime;
+		_frameTime = _frameStartTime - _prevFrameStartTime;
+  		_prevFrameStartTime = _frameStartTime;
 
 		/* poll events in a loop */
 		glfwPollEvents();

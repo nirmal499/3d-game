@@ -17,7 +17,7 @@ void MasterRenderer::Render(Light* light, Camera* camera)
 {
     _renderer->Prepare();
     _shader->Start();
-	_shader->LoadCameraPosition(camera->GetPositionVector());
+	_shader->LoadCameraPosition(camera->GetWorldPosition());
     _shader->LoadLight(light);
     _shader->LoadViewMatrix(Math::CreateViewMatrix(camera));
 

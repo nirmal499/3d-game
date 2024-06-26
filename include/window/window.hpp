@@ -35,10 +35,6 @@ class Window
         unsigned int _width;
         unsigned int _height;
 
-        bool _firstMouse;
-        int _lastX;
-        int _lastY;
-
         const float _speed = 0.5f;
         std::unique_ptr<Camera> _camera;
         std::unique_ptr<Player> _player;
@@ -53,15 +49,16 @@ class Window
         float _tempFloat5;
         float _tempFloat6;
 
+        float _frameStartTime = 0.0f;
+        float _prevFrameStartTime = 0.0f;
+
         std::random_device _rd;
         std::default_random_engine _eng;
         std::uniform_real_distribution<float> _distr;
 
         float _frameTime = 0.0f;
-
         float _mouseXPos = 0.0f;
         float _mouseYPos = 0.0f;
-
         int _moveForward = 0;
         int _moveRight = 0;
         int _moveUp = 0;
