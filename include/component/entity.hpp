@@ -10,8 +10,12 @@ class Entity
     public:
         Entity(std::unique_ptr<TexturedModel> model, const glm::vec3& position, const glm::vec3& rotation, float scale);
         
-        glm::vec3 GetPosition();
-        glm::vec3 GetRotation();
+        const glm::vec3& GetPosition();
+
+        void SetPosition(const std::array<float, 3>& position);
+        void SetRotation(const std::array<float, 3>& rotation);
+
+        const glm::vec3& GetRotation();
         float GetScale();
 
         void IncreasePosition(const glm::vec3& change);

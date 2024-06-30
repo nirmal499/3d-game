@@ -28,7 +28,7 @@ glm::mat4 Math::CreateViewMatrix(Camera* camera)
     glm::mat4 viewMatrix = glm::lookAt(
 		camera->GetWorldPosition(),
         camera->GetWorldPosition() + camera->GetViewDirection(),
-        camera->GetUpDirection()
+        camera->GetWorldUpDirection()
 	);
 
     // glm::mat4 viewMatrix = glm::lookAt(

@@ -2,6 +2,7 @@
 
 #include <util/common.hpp>
 #include <random>
+#include <net/client.hpp>
 
 class Camera;
 class Player;
@@ -29,18 +30,19 @@ class Window
         void HandleKeyEvents(int key, int scancode, int action, int mods);
 
         void CalculateCameraPosition();
+        void PollReponse();
+        void SendData();
     
     private:
         GLFWwindow* _window = nullptr;
         unsigned int _width;
         unsigned int _height;
 
-        const float _speed = 0.5f;
         std::unique_ptr<Camera> _camera;
-        std::unique_ptr<Player> _player;
         std::unique_ptr<Loader> _loader;
         std::unique_ptr<OBJLoader> _objLoader;
 
+        /* Some temporay variables */
         glm::vec3 _tempVec3;
         float _tempFloat1;
         float _tempFloat2;
@@ -48,18 +50,35 @@ class Window
         float _tempFloat4;
         float _tempFloat5;
         float _tempFloat6;
+        /***************************** */
 
-        float _frameStartTime = 0.0f;
-        float _prevFrameStartTime = 0.0f;
+        float _cameraSpeed = 0.0f;
+        float _deltaTime = 0.0f; /* time between current frame and last frame */
+        float _lastFrame = 0.0f;
+        float _currentFrame = 0.0f;
 
         std::random_device _rd;
         std::default_random_engine _eng;
         std::uniform_real_distribution<float> _distr;
 
-        float _frameTime = 0.0f;
-        float _mouseXPos = 0.0f;
-        float _mouseYPos = 0.0f;
-        int _moveForward = 0;
-        int _moveRight = 0;
-        int _moveUp = 0;
+        const float _sensitivity = 0.1f;
+        float _lastX;
+        float _lastY;
+        float _xoffset;
+        float _yoffset;
+        float _xPos;
+        float _yPos;
+        bool _firstMouse;
+
+        std::unordered_map<uint32_t, std::unique_ptr<Player>> _playerRecord;
+        std::unique_ptr<Client> _client = nullptr;
+        bool _connectionExists = false;
+        bool _startsMMO = false;
+        std::array<float, 6> _playerPositionAndRotationInfo;
+        std::array<float, 3> _playerPositionInfo;
+        std::array<float, 3> _playerRotationInfo;
+
+        std::vector<uint32_t> _tempVectorUINT;
+
+        bool _isCursorDisabled;
 };

@@ -12,12 +12,26 @@ Entity::Entity(std::unique_ptr<TexturedModel> model, const glm::vec3& position, 
     
 }
 
-glm::vec3 Entity::GetPosition()
+const glm::vec3& Entity::GetPosition()
 {
     return _position;
 }
 
-glm::vec3 Entity::GetRotation()
+void Entity::SetPosition(const std::array<float, 3>& position)
+{
+    _position.x = position[0];
+    _position.y = position[1];
+    _position.z = position[2];
+}
+
+void Entity::SetRotation(const std::array<float, 3>& rotation)
+{
+    _rotation.x = rotation[0];
+    _rotation.y = rotation[1];
+    _rotation.z = rotation[2];
+}
+
+const glm::vec3& Entity::GetRotation()
 {
     return _rotation;
 }

@@ -11,6 +11,9 @@ project(main)
 find_package(assimp REQUIRED)
 include_directories(${ASSIMP_INCLUDE_DIRS})
 
+set(Boost_ROOT "/home/nbaskey/my_opt/boost_libs/")
+find_package(Boost 1.84 REQUIRED COMPONENTS)
+
 add_subdirectory(external/glfw)
 add_subdirectory(external/glm)
 
@@ -34,8 +37,15 @@ add_executable(main
     src/master_renderer.cpp
     src/player.cpp
 
+    src/client.cpp
+    src/server.cpp
 
     external/glad/src/glad.c
+)
+
+add_executable(server 
+    server_main.cpp
+    src/server.cpp
 )
 
 target_include_directories(main
@@ -46,9 +56,20 @@ target_include_directories(main
     PRIVATE include
     PRIVATE external/glad/include
     PRIVATE external/stbImage/include
+    PRIVATE ${Boost_INCLUDE_DIRS}
 )
 
 target_link_libraries(main
     PRIVATE glfw
     PRIVATE assimp::assimp
+    PRIVATE ${Boost_SYSTEM_LIBRARY}
+)
+
+target_include_directories(server
+    PRIVATE include
+    PRIVATE ${Boost_INCLUDE_DIRS}
+)
+
+target_link_libraries(server
+    PRIVATE ${Boost_SYSTEM_LIBRARY}
 )

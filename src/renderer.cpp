@@ -16,7 +16,7 @@ Renderer::Renderer(StaticShader* shader, int width, int height)
 	glCullFace(GL_BACK);
     // glEnable(GL_TEXTURE_2D);
 
-    _projectionDetails = std::make_unique<ProjectionDetails>(70.0f, width, height, 0.1f, 1000.0f);
+    _projectionDetails = std::make_unique<ProjectionDetails>(45.0f, width, height, 0.1f, 100.0f);
 
     shader->Start();
     shader->LoadProjectionMatrix(Math::CreateProjectionMatrix(_projectionDetails.get()));
