@@ -7,6 +7,7 @@ class Player : public Entity
 {
     public:
         Player(std::unique_ptr<TexturedModel> model, const glm::vec3& position, const glm::vec3& rotation, float scale);
+        virtual ~Player() = default;
 
     private:
         static float RUN_SPEED;

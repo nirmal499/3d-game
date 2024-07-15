@@ -21,7 +21,6 @@ struct ThreadSafeQueue
     void PushFront(const T& item);
 
     void Clear();
-    /* Do not use "PopFrontWithSleep()". Instead of it use "PopFrontWithoutSleep()" +  "Wait()" */
     T PopFrontWithSleep();
 
     T PopFrontWithoutSleep();
@@ -106,6 +105,8 @@ void ThreadSafeQueue<T>::Wait()
         return !_deQ.empty();
     });
     /* wait{aka sleep} till deQueue is not empty */
+
+    /* mutex {gaurd} is destroyed here as per RAII */
 }
 
 template<typename T>

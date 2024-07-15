@@ -9,6 +9,7 @@ class Entity
 {
     public:
         Entity(std::unique_ptr<TexturedModel> model, const glm::vec3& position, const glm::vec3& rotation, float scale);
+        virtual ~Entity() = default;
         
         const glm::vec3& GetPosition();
 

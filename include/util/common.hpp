@@ -15,9 +15,9 @@
 #include <string>
 #include <memory>
 
-#define SHADER_PATH "/home/nbaskey/Desktop/nirmal/projects/cg/ogl-engine-copy/assets/shader/"
-#define TEXTURE_PATH "/home/nbaskey/Desktop/nirmal/projects/cg/ogl-engine-copy/assets/texture/"
-#define RES_PATH "/home/nbaskey/Desktop/nirmal/projects/cg/ogl-engine-copy/assets/res/"
+#define SHADER_PATH "/home/nbaskey/Desktop/nirmal/projects/majorProjects/ogl-mmo-renderer/assets/shader/"
+#define TEXTURE_PATH "/home/nbaskey/Desktop/nirmal/projects/majorProjects/ogl-mmo-renderer/assets/texture/"
+#define RES_PATH "/home/nbaskey/Desktop/nirmal/projects/majorProjects/ogl-mmo-renderer/assets/res/"
 
 struct ProjectionDetails
 {

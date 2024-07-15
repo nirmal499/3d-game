@@ -153,7 +153,6 @@ bool Window::Initialization(unsigned int width, unsigned int height, std::string
 
 	_firstMouse = true;
 	_isCursorDisabled = true;
-	
   	return true;
 }
 
@@ -333,22 +332,22 @@ void Window::HandleKeyEvents(int key, int scancode, int action, int mods)
                 	break;
 				case GLFW_KEY_O:
                 	// std::cout << "Key O is pressed" << std::endl;
-					_playerRecord[1]->_currentSpeed = Player::RUN_SPEED;
+					_playerRecord[1]->_currentSpeed = 1;
 					isOKKey = true;
                 	break;
             	case GLFW_KEY_K:
                 	// std::cout << "Key K is pressed" << std::endl;
-					_playerRecord[1]->_currentSpeed = -Player::RUN_SPEED;
+					_playerRecord[1]->_currentSpeed = -1;
 					isOKKey = true;
 					break;
             	case GLFW_KEY_J:
                 	// std::cout << "Key J is pressed" << std::endl;
-					_playerRecord[1]->_currentTurnSpeed = Player::TURN_SPEED;
+					_playerRecord[1]->_currentTurnSpeed = 1;
 					isJLKey = true;
                 	break;
             	case GLFW_KEY_L:
                 	// std::cout << "Key L is pressed" << std::endl;
-					_playerRecord[1]->_currentTurnSpeed = -Player::TURN_SPEED;
+					_playerRecord[1]->_currentTurnSpeed = -1;
 					isJLKey = true;
                 	break;
 				// case GLFW_KEY_G:
@@ -629,6 +628,7 @@ void Window::PollReponse()
 						std::unique_ptr<TexturedModel> model = std::make_unique<TexturedModel>(*(_playerRecord[1]->GetModel()));
 						std::unique_ptr<Player> newPlayer = std::make_unique<Player>(std::move(model), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0, 0, 0), 1.0);
 						newPlayer->SetPosition(_playerPositionInfo);
+						newPlayer->SetRotation(_playerRotationInfo);
 
 						_playerRecord.insert({playerIDToUpdate, std::move(newPlayer)});
 						std::cout << playerIDToUpdate << " Player Does not Exists, so create it and We tried to change its position\n";
@@ -677,7 +677,6 @@ void Window::MainLoop()
 	glfwSwapInterval(1);
 
 	std::unique_ptr<Light> light = std::make_unique<Light>(glm::vec3(0, 0, -5), glm::vec3(1.0, 1.0, 1.0));
-
 	std::unique_ptr<MasterRenderer> masterRenderer = std::make_unique<MasterRenderer>(_width, _height);
 
 	while (!glfwWindowShouldClose(_window))
