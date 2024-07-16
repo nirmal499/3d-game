@@ -31,3 +31,5 @@ chmod u+x run.sh
 
 # To run the MMO server
 ./run.sh project-run-server
+```
+**A lot more features will be added in this project {WORK IN PROGRESS}**
