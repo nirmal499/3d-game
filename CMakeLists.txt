@@ -17,6 +17,10 @@ find_package(Boost 1.84 REQUIRED COMPONENTS)
 add_subdirectory(external/glfw)
 add_subdirectory(external/glm)
 
+# ROOT_DIR is a macro defined in util/common.hpp
+set(ROOT_DIR "${CMAKE_SOURCE_DIR}")
+add_compile_definitions(ROOT_PATH="${ROOT_DIR}")
+
 add_executable(main 
     main.cpp
 

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <ios>
+#include <stdexcept>
 #include <util/mmo_common.hpp>
 #include <mmo/thread_safe_queue.hpp>
 #include <mmo/message.hpp>
@@ -48,7 +50,13 @@ struct Connection : public std::enable_shared_from_this<Connection<T>>
     virtual ~Connection();
 
     uint32_t GetID() const;
+
+    /* It does async_connect */
     void ConnectToServer(const boost::asio::ip::tcp::resolver::results_type& endpoints);
+
+    /* It does sync_connect */
+    bool ConnectToServerSynchronous(const boost::asio::ip::tcp::resolver::results_type& endpoints);
+
     void Disconnect();
     bool IsConnected() const;
 
@@ -118,7 +126,7 @@ inline Connection<T>::~Connection()
 
 template<typename T>
 inline void Connection<T>::ConnectToServer(const boost::asio::ip::tcp::resolver::results_type& endpoints)
-{
+{   
     if(_ownerType == OWNERTYPE::CLIENT)
     {
         boost::asio::async_connect(_socket, endpoints, [this](boost::system::error_code ec, boost::asio::ip::tcp::endpoint endpoint)
@@ -127,7 +135,30 @@ inline void Connection<T>::ConnectToServer(const boost::asio::ip::tcp::resolver:
             {
                 this->ReadValidation();
             }
+            else
+            {
+                _socket.close();
+            }
         });
+    }
+}
+
+template<typename T>
+inline bool Connection<T>::ConnectToServerSynchronous(const boost::asio::ip::tcp::resolver::results_type& endpoints)
+{
+    boost::system::error_code ec;
+
+    boost::asio::connect(_socket, endpoints, ec);
+
+    if(!ec)
+    {
+        this->ReadValidation();
+        return true;
+    }
+    else
+    {
+        // std::cout << "Failed to connect: " << ec.message() << "\n";
+        return false;
     }
 }
 
@@ -146,6 +177,11 @@ inline void Connection<T>::Disconnect()
 template<typename T>
 inline bool Connection<T>::IsConnected() const
 {
+    /*
+        The boost::asio::ip::tcp::socket::is_open() method returns true if the socket has been successfully opened, 
+        regardless of whether a connection to a remote endpoint has been established. This means that if you create 
+        a socket and do not explicitly close it, is_open() will return true.
+    */
     return _socket.is_open();
 }
 

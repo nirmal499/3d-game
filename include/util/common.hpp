@@ -15,9 +15,10 @@
 #include <string>
 #include <memory>
 
-#define SHADER_PATH "/home/nbaskey/Desktop/nirmal/projects/majorProjects/ogl-mmo-renderer/assets/shader/"
-#define TEXTURE_PATH "/home/nbaskey/Desktop/nirmal/projects/majorProjects/ogl-mmo-renderer/assets/texture/"
-#define RES_PATH "/home/nbaskey/Desktop/nirmal/projects/majorProjects/ogl-mmo-renderer/assets/res/"
+/* ROOT_PATH is compile definition set in CMake */
+#define SHADER_PATH ROOT_PATH "/assets/shader/"
+#define TEXTURE_PATH ROOT_PATH "/assets/texture/"
+#define RES_PATH ROOT_PATH "/assets/res/"
 
 struct ProjectionDetails
 {

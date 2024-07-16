@@ -1,4 +1,5 @@
 #include <cstdint>
+#include <cstdlib>
 #include <util/mmo_common.hpp>
 #include <mmo/message.hpp>
 #include <component/master_renderer.hpp>
@@ -143,11 +144,19 @@ bool Window::Initialization(unsigned int width, unsigned int height, std::string
 	_client = std::make_unique<Client>();
 	if(_client->Connect("127.0.0.1", 60000))
 	{
-		std::cout << "Client Successfully sent connection request.\n";
+		std::cout << "Client successfully sent the connection request to the server\n";
 	}
 	else
 	{
-		std::cout << "Client failed sending connection\n";
+		/* 
+			It clears out the all the resources held up by the _client.
+			It also closes the socket that was opened for making a connection to the server.
+
+			The boost::asio::ip::tcp::socket::is_open() method returns true if the socket has been successfully opened, 
+			regardless of whether a connection to a remote endpoint has been established. This means that if you create 
+			a socket and do not explicitly close it, is_open() will return true.
+		*/
+		std::cout << "Unable to send the connection request to the server. There is some failure in client\n";
 		std::abort();
 	}
 
@@ -391,18 +400,18 @@ void Window::HandleKeyEvents(int key, int scancode, int action, int mods)
 					}
 					else
 					{
-						std::cout << "Client is not connected\n";
+						std::cout << "Client is Not Connected\n";
 					}
                 	break;
 				case GLFW_KEY_V:
-					if(!_startsMMO)
+					if(_client->IsConnected())
 					{
-						std::cout << "Starting MMO.......\n";
-						_startsMMO = true;
+						_startsMMO = !_startsMMO;
+						std::cout << (_startsMMO ? "MMO is started......." : "MMO is stopped......") << "\n";
 					}
 					else
 					{
-						std::cout << "MMO is already started....\n";
+						std::cout << "Client is Not Connected\n";
 					}
 					break;
 				case GLFW_KEY_R:

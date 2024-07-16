@@ -5,7 +5,7 @@ int main()
     Server server(60000);
     server.Start();
 
-    while(1)
+    while(true)
     {
         server.Update(true);
     }

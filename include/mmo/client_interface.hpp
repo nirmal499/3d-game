@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stdexcept>
 #include <util/mmo_common.hpp>
 #include <mmo/message.hpp>
 #include <mmo/thread_safe_queue.hpp>
@@ -55,7 +56,13 @@ inline bool ClientInterface<T>::Connect(const std::string& host, const uint16_t&
                                                     nullptr,
                                                     this
                                                 );
-        /* Tell the connection object to connect to the server */
+        /* Tell the connection object to connect to the server synchronously */ 
+        // if(!_conn->ConnectToServerSynchronous(_endpoint))
+        // {
+        //     throw std::runtime_error("Server is not available");
+        // }
+
+        /* Tell the connection object to connect to the server asynchronously */
         _conn->ConnectToServer(_endpoint);
 
         /* Start the thread that will run io_service */
