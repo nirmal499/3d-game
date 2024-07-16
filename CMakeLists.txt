@@ -11,8 +11,18 @@ project(main)
 find_package(assimp REQUIRED)
 include_directories(${ASSIMP_INCLUDE_DIRS})
 
-set(Boost_ROOT "/home/nbaskey/my_opt/boost_libs/")
-find_package(Boost 1.84 REQUIRED COMPONENTS)
+find_package(Boost 1.84 QUIET COMPONENTS)
+
+if(NOT Boost_FOUND)
+    set(Boost_ROOT "/home/nbaskey/my_opt/boost_libs/")
+    find_package(Boost 1.84 REQUIRED COMPONENTS)
+endif()
+
+if(NOT Boost_FOUND)
+    message(FATAL_ERROR "Boost 1.84 or later is required but was not found.")
+else()
+    message(STATUS "Boost found: ${Boost_INCLUDE_DIRS}")
+endif()
 
 add_subdirectory(external/glfw)
 add_subdirectory(external/glm)
